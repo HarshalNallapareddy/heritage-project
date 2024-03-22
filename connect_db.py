@@ -2,11 +2,12 @@ import mysql.connector
 
 def create_connection():
     try:
+        print('trying to connect to Google Cloud MySQL Database')
         conn = mysql.connector.connect(
-            user='your_username',
-            password='your_password',
-            host='your_database_ip',
-            database='your_database_name'
+            user='root',
+            password='Heritage4750',
+            host='34.48.57.233',
+            database='familytree'
         )
         print("Connection established to Google Cloud MySQL Database.")
         return conn
