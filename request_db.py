@@ -1,7 +1,6 @@
 import connect_db as db
 import mysql.connector
 
-# For the users table:
 def add_user(username, email, phone, password_hash):
     conn = db.create_connection()
     cursor = conn.cursor()
