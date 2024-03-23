@@ -12,7 +12,9 @@ sql_commands = [
         UserID INT AUTO_INCREMENT PRIMARY KEY UNIQUE,
         Username VARCHAR(255) NOT NULL,
         Email VARCHAR(255) NOT NULL UNIQUE,
+        CONSTRAINT check_email_pattern CHECK (Email LIKE '%@%.%'),
         Phone VARCHAR(20),
+        CONSTRAINT check_phone_pattern CHECK (Phone LIKE '_+___-___-____'),
         PasswordHash VARCHAR(255) NOT NULL
     )
     """,
@@ -106,6 +108,12 @@ sql_commands = [
         ActionDetails VARCHAR(255) NOT NULL,
         FOREIGN KEY (UserID) REFERENCES Users(UserID)
     )
+    """,
+    """
+    CREATE TRIGGER safety
+    ON familytree
+    FOR create_table,alter_table,drop_table
+    AS print 'you can not create,drop and alter tables in this database'
     """
 ]
 

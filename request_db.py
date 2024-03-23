@@ -488,3 +488,4 @@ def get_all_users():
     except mysql.connector.Error as e:
         print(e)
         return None
+
