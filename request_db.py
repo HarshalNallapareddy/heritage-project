@@ -120,4 +120,243 @@ def add_accesslogs(userid, actiontype, actiontimestamp, actiondetails):
     except mysql.connector.Error as e:
         print(e)
         return None
+    
+def update_user(userid, username, email, phone):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE Users SET Username = %s, Email = %s, Phone = %s WHERE UserID = %s",
+                       (username, email, phone, userid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def update_tree(treeid, treename):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE FamilyTrees SET TreeName = %s WHERE TreeID = %s",
+                       (treename, treeid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def update_tree_access(userid, treeid, accessrole):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE TreeAccess SET AccessRole = %s WHERE UserID = %s AND TreeID = %s",
+                       (accessrole, userid, treeid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
 
+def update_family_member(memberid, treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE FamilyMembers SET TreeID = %s, FullName = %s, DateOfBirth = %s, DateOfDeath = %s, PictureURL = %s, StreetAddress = %s, City = %s, State = %s, Country = %s, ZIPCode = %s, Email = %s, Phone = %s WHERE MemberID = %s",
+                       (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone, memberid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+
+def update_relationship(relationshipId, treeId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE Relationships SET TreeID = %s WHERE RelationshipID = %s",
+                       (treeId, relationshipId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def update_marriagerelationship(marriageId, relationshipId, member1Id, member2Id):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE Marriages SET RelationshipID = %s, Spouse1MemberID = %s, Spouse2MemberID = %s WHERE MarriageID = %s",
+                       (relationshipId, member1Id, member2Id, marriageId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def update_parentchildrelationship(parentchildId, relationshipId, parentId, childId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE ParentChild SET RelationshipID = %s, ParentMemberID = %s, ChildMemberID = %s WHERE ParentChildID = %s",
+                       (relationshipId, parentId, childId, parentchildId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def update_hobbies(hobbyId, memberId, hobby):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE Hobbies SET MemberID = %s, HobbyName = %s WHERE HobbyID = %s",
+                       (memberId, hobby, hobbyId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def update_searchhistory(searchId, userId, searchTerm, searchDate):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE SearchHistory SET UserID = %s, SearchQuery = %s, SearchDate = %s WHERE SearchID = %s",
+                       (userId, searchTerm, searchDate, searchId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def update_accesslogs(logId, userId, actionType, actionTimestamp, actionDetails):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE AccessLogs SET UserID = %s, ActionType = %s, ActionTimestamp = %s, ActionDetails = %s WHERE LogID = %s",
+                       (userId, actionType, actionTimestamp, actionDetails, logId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_user(userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM Users WHERE UserID = %s",
+                       (userid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_tree(treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM FamilyTrees WHERE TreeID = %s",
+                       (treeid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_tree_access(userid, treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM TreeAccess WHERE UserID = %s AND TreeID = %s",
+                       (userid, treeid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_family_member(memberid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM FamilyMembers WHERE MemberID = %s",
+                       (memberid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_relationship(relationshipId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM Relationships WHERE RelationshipID = %s",
+                       (relationshipId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_marriagerelationship(marriageId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM Marriages WHERE MarriageID = %s",
+                       (marriageId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_parentchildrelationship(parentchildId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM ParentChild WHERE ParentChildID = %s",
+                       (parentchildId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_hobbies(hobbyId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM Hobbies WHERE HobbyID = %s",
+                       (hobbyId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_searchhistory(searchId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM SearchHistory WHERE SearchID = %s",
+                       (searchId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def delete_accesslogs(logId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM AccessLogs WHERE LogID = %s",
+                       (logId))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
