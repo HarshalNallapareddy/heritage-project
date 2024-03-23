@@ -368,6 +368,7 @@ def delete_accesslogs(logId):
         return None
     
 # ------------------- SELECT ---------------------------------------
+    
 def get_user(userid):
     conn = db.create_connection()
     cursor = conn.cursor()
