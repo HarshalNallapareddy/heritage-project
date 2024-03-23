@@ -1,6 +1,8 @@
 import connect_db as db
 import mysql.connector
 
+# ------------------- ADD ---------------------------------------
+
 def add_user(username, email, phone, password_hash):
     conn = db.create_connection()
     cursor = conn.cursor()
@@ -120,6 +122,8 @@ def add_accesslogs(userid, actiontype, actiontimestamp, actiondetails):
     except mysql.connector.Error as e:
         print(e)
         return None
+    
+# ------------------- UPDATE ---------------------------------------
     
 def update_user(userid, username, email, phone):
     conn = db.create_connection()
@@ -241,6 +245,8 @@ def update_accesslogs(logId, userId, actionType, actionTimestamp, actionDetails)
         print(e)
         return None
     
+# ------------------- DELETE ---------------------------------------
+    
 def delete_user(userid):
     conn = db.create_connection()
     cursor = conn.cursor()
@@ -357,6 +363,127 @@ def delete_accesslogs(logId):
                        (logId))
         conn.commit()
         return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+# ------------------- SELECT ---------------------------------------
+def get_user(userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM Users WHERE UserID = %s",
+                       (userid))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_tree(treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM FamilyTrees WHERE TreeID = %s",
+                       (treeid))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_tree_access(userid, treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM TreeAccess WHERE UserID = %s AND TreeID = %s",
+                       (userid, treeid))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_family_member(memberid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM FamilyMembers WHERE MemberID = %s",
+                       (memberid))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_relationship(relationshipId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM Relationships WHERE RelationshipID = %s",
+                       (relationshipId))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_marriagerelationship(marriageId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM Marriages WHERE MarriageID = %s",
+                       (marriageId))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_parentchildrelationship(parentchildId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM ParentChild WHERE ParentChildID = %s",
+                       (parentchildId))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_hobbies(hobbyId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM Hobbies WHERE HobbyID = %s",
+                       (hobbyId))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_searchhistory(searchId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM SearchHistory WHERE SearchID = %s",
+                       (searchId))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_accesslogs(logId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM AccessLogs WHERE LogID = %s",
+                       (logId))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_all_users():
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM Users")
+        return cursor.fetchall()
     except mysql.connector.Error as e:
         print(e)
         return None
