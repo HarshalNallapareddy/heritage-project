@@ -90,7 +90,7 @@ CREATE TABLE AccessLogs (
         FOREIGN KEY (UserID) REFERENCES Users(UserID)
     );
 
-CREATE TRIGGER RelationshipsAuto 
-AFTER INSERT ON FamilyMembers 
+CREATE TRIGGER EditorAuto 
+AFTER INSERT ON FamilyTrees
 FOR EACH ROW 
-INSERT INTO Relationships (TreeID) VALUES(NEW.TreeID);
+INSERT INTO TreeAccess (UserID, TreeID, AccessRole) VALUES(NEW.OwnerUserID, NEW.TreeID, "Editor");

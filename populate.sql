@@ -17,6 +17,8 @@ INSERT INTO Users (Username, Email, Phone, PasswordHash) VALUES ("kaitie", "mail
 INSERT INTO Users (Username, Email, Phone, PasswordHash) VALUES ("leila", "virginia@virginia.email", "1+703-567-1234", "password");
 INSERT INTO Users (Username, Email, Phone, PasswordHash) VALUES ("dillon", "sdafs@virginia.email", "1+703-567-1234", "password");
 INSERT INTO Users (Username, Email, Phone, PasswordHash) VALUES ("sam", "sam1@virginia.email", "1+703-567-1234", "password");
+INSERT INTO Users (Username, Email, Phone, PasswordHash) VALUES ("myst", "fbi@ggggg.a", "1+111-111-1111", "!~!#%YGA^*()");
+INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES("tree", 1);
 INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES("tree", 2);
 INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES("tree", 3);
 INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES("tree", 4);
@@ -31,21 +33,6 @@ INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES("Tree", 17);
 INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES("sdfggfa", 18);
 INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES("fadgfa", 19);
 INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES("1234 fmkka f", 20);
-INSERT INTO TreeAccess VALUES (2, 1, "Editor");
-INSERT INTO TreeAccess VALUES (2, 1, "Editor");
-INSERT INTO TreeAccess VALUES (3, 2, "Editor");
-INSERT INTO TreeAccess VALUES (4, 3, "Editor");
-INSERT INTO TreeAccess VALUES (5, 4, "Editor");
-INSERT INTO TreeAccess VALUES (6, 5, "Editor");
-INSERT INTO TreeAccess VALUES (12, 6, "Editor");
-INSERT INTO TreeAccess VALUES (13, 7, "Editor");
-INSERT INTO TreeAccess VALUES (14, 8, "Editor");
-INSERT INTO TreeAccess VALUES (15, 9, "Editor");
-INSERT INTO TreeAccess VALUES (16, 10, "Editor");
-INSERT INTO TreeAccess VALUES (17, 11, "Editor");
-INSERT INTO TreeAccess VALUES (18, 12, "Editor");
-INSERT INTO TreeAccess VALUES (19, 13, "Editor");
-INSERT INTO TreeAccess VALUES (20, 14, "Editor");
 INSERT INTO TreeAccess VALUES (10, 2, "Viewer");
 INSERT INTO TreeAccess VALUES (14, 3, "Viewer");
 INSERT INTO TreeAccess VALUES (15, 11, "Viewer");
@@ -56,13 +43,25 @@ INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth) VALUES(11, "Uncle Jim"
 INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth) VALUES(11, "Uncle Mary", "1964-12-15");
 INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth) VALUES(11, "Brian Bob", "2001-05-07");
 INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth) VALUES(11, "Bob Bob", "2000-06-01");
-INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath) VALUES(12, 'Jimmy Bob', "1967-02-27", "1971-03-24");
-INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, StreetAddress, City, State, Country, ZIPCode) VALUES(12, "Mary Bob", "1937-01-01", "250 street", "san francisco", "california", "canada", "22333");
-INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, Email) VALUES(12, "Uncle Jim", "1974-06-12", "email@gmail.com");
-INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, Phone) VALUES(12, "Uncle Mary", "1964-12-15", "202-344-5022);
-
-
-
-
-
-
+INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath) VALUES(12, 'Jimmy Bob 2', "1967-02-27", "1971-03-24");
+INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, StreetAddress, City, State, Country, ZIPCode) VALUES(12, "Mary Bob 2", "1937-01-01", "250 street", "san francisco", "california", "canada", "22333");
+INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, Email) VALUES(12, "Uncle Jim 2", "1974-06-12", "email@gmail.com");
+INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, Phone) VALUES(12, "Uncle Mary 2", "1964-12-15", "202-344-5022");
+INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, Email, Phone) VALUES(12, "Brian Bob 2", "2001-05-07", "21324@3142.132", "123456-134-13455");
+INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth) VALUES(12, "Bob Bob 2", "2000-06-01");
+INSERT INTO Relationships (TreeID) VALUES (11);
+INSERT INTO Relationships (TreeID) VALUES (11);
+INSERT INTO Relationships (TreeID) VALUES (11);
+INSERT INTO Relationships (TreeID) VALUES (11);
+INSERT INTO Relationships (TreeID) VALUES (12);
+INSERT INTO Relationships (TreeID) VALUES (12);
+INSERT INTO Relationships (TreeID) VALUES (12);
+INSERT INTO Relationships (TreeID) VALUES (12);
+INSERT INTO Marriages (RelationshipID, Spouse1MemberID, Spouse2MemberID) VALUES (1, 1, 2);
+INSERT INTO Marriages (RelationshipID, Spouse1MemberID, Spouse2MemberID) VALUES (2, 3 , 4);
+INSERT INTO Marriages (RelationshipID, Spouse1MemberID, Spouse2MemberID) VALUES (3, 7, 8);
+INSERT INTO Marriages (RelationshipID, Spouse1MemberID, Spouse2MemberID) VALUES (4, 9, 10);
+INSERT INTO ParentChild (RelationshipID, ParentMemberID, ChildMemberID) VALUES (5, 1, 5);
+INSERT INTO ParentChild (RelationshipID, ParentMemberID, ChildMemberID) VALUES (6, 1, 6);
+INSERT INTO ParentChild (RelationshipID, ParentMemberID, ChildMemberID) VALUES (7, 7, 11);
+INSERT INTO ParentChild (RelationshipID, ParentMemberID, ChildMemberID) VALUES (8, 7, 12);
