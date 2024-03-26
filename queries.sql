@@ -1,5 +1,6 @@
 -- Queries for creating the database tables:
 
+-- Adanced Query #1:
 CREATE TABLE Users (
         UserID INT AUTO_INCREMENT PRIMARY KEY,
         Username VARCHAR(255) NOT NULL,
@@ -90,12 +91,14 @@ CREATE TABLE AccessLogs (
         FOREIGN KEY (UserID) REFERENCES Users(UserID)
     );
 
+-- Advanced Query #2:
 CREATE TRIGGER EditorAuto 
 AFTER INSERT ON FamilyTrees
 FOR EACH ROW 
 INSERT INTO TreeAccess (UserID, TreeID, AccessRole) VALUES(NEW.OwnerUserID, NEW.TreeID, "Editor");
 
----Queries used for populating the tables---
+--Queries used for populating the tables:
+
 INSERT INTO Users (Username, Email, Phone, PasswordHash) VALUES ("username01", "username01@virginia.email", "1+703-567-1234", "password");
 INSERT INTO Users (Username, Email, Phone, PasswordHash) VALUES ("username02", "username02@virginia.email", "1+703-567-1234", "password");
 INSERT INTO Users (Username, Email, Phone, PasswordHash) VALUES ("username03", "username03@virginia.email", "1+703-567-1234", "password");
@@ -185,7 +188,7 @@ INSERT INTO AccessLogs (UserID, ActionType, ActionTimestamp, ActionDetails) VALU
 INSERT INTO AccessLogs (UserID, ActionType, ActionTimestamp, ActionDetails) VALUES (4, 'Login', NOW(), 'User logged in successfully');
 INSERT INTO AccessLogs (UserID, ActionType, ActionTimestamp, ActionDetails) VALUES (5, 'Logout', NOW(), 'User logged out successfully');
 
----Truncate tables for databases---
+--Truncate tables for databases:
 SET FOREIGN_KEY_CHECKS=0
 TRUNCATE TABLE TreeAccess;
 TRUNCATE TABLE Users;
