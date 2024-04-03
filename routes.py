@@ -3,7 +3,6 @@ from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 import mimetypes
 import request_db as db
-import hashlib
 
 class User(BaseModel):
     userid: str
@@ -25,8 +24,7 @@ app.add_middleware(
 @app.post("/users/createuser/")
 async def login(user: User):
     print(user)
-    password_bytes = user.password.encode('utf-8')
-    user.password = hashlib.sha256(password_bytes).hexdigest()
+    user.password = hash(user.password)
     db.add_user(user.userid, user.username, user.email, user.phone, user.password)
 
 @app.get("/users/getuser/{username}")
@@ -39,8 +37,7 @@ async def get_user(username: str):
 @app.post("/users/login/")
 async def login(username: str, password: str):
     user = db.get_user(username)
-    password_bytes = password.encode('utf-8')
-    hashed_password = hashlib.sha256(password_bytes).hexdigest()
+    hashed_password = hash(password)
     
     if user is None or user.password != hashed_password:
         raise HTTPException(status_code=401, detail="Invalid username or password")
