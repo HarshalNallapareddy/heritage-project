@@ -380,6 +380,17 @@ def get_user(userid):
         print(e)
         return None
     
+def get_user_by_username(username):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM Users WHERE Username = %s",
+                       (username))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
 def get_tree(treeid):
     conn = db.create_connection()
     cursor = conn.cursor()
