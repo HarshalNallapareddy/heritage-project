@@ -22,10 +22,12 @@ app.add_middleware(
 )
 
 @app.post("/users/createuser/")
-async def login(user: User):
+async def create_user(user: User):
     print(user)
     user.password = hash(user.password)
-    db.add_user(user.userid, user.username, user.email, user.phone, user.password)
+    if db.get_user(user.username) is not None:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    db.add_user(user.username, user.email, user.phone, user.password)
 
 @app.get("/users/getuser/{username}")
 async def get_user(username: str):
@@ -43,3 +45,46 @@ async def login(username: str, password: str):
         raise HTTPException(status_code=401, detail="Invalid username or password")
     return {"message": "Login successful"}
 
+@app.get("/generatetree/{username}")
+async def generate_tree(username : str):
+    treeID = db.get_treeId_from_username(username)
+    # list of memberIDs
+    family_members = db.get_familymemberIds_from_treeId(treeID)
+    # list of relationshipIDs
+    relationshipIds = db.get_relationships_from_treeId(treeID)
+
+    connections = []
+    for rel in relationshipIds:
+        rel_tuple = db.get_marriage_from_relationshipId(rel)
+        if rel_tuple is not None: # this means the relationship is a marriage
+            new_connection = {}
+            new_connection["type"] = "marriage"
+            new_connection["source"] = db.get_member_from_memberId(rel_tuple[2])
+            new_connection["target"] = db.get_member_from_memberId(rel_tuple[3])
+            connections.append(new_connection)
+        else:
+            rel_tuple = db.get_parent_child_from_relationshipId(rel)
+            if rel_tuple is None:
+                raise HTTPException(status_code=500, detail="Invalid relationship")
+            new_connection = {}
+            new_connection["type"] = "parent-child"
+            new_connection["source"] = db.get_member_from_memberId(rel_tuple[2])
+            new_connection["target"] = db.get_member_from_memberId(rel_tuple[3])
+            connections.append(new_connection)
+
+    nodes = []
+    for memberId in family_members:
+        new_node = {}
+        member = db.get_family_member(memberId)
+        new_node["id"] = memberId
+        new_node["name"] = member[2]
+        new_node["dateOfBirth"] = member[3]
+        new_node["hobbies"] = db.get_hobbies_from_memberId(memberId)
+        nodes.append(new_node)
+
+    return {"nodes": nodes, "connections": connections}
+
+    
+            
+
+    

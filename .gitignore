@@ -2,3 +2,5 @@
 env/
 env
 # i forgot which one it is
+
+__pycache__/
