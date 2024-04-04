@@ -48,6 +48,12 @@
             var phone = document.getElementById("phone").value;
             var email = document.getElementById("email").value;
 
+            function sha256Hash(input) {
+                const hash = crypto.createHash('sha256');
+                hash.update(input);
+                return hash.digest('hex');
+            }
+
             function validateForm(){
                 var errorMessage = document.getElementById("password error");
 
@@ -92,7 +98,7 @@
                     "username": username,
                     "email": email,
                     "phone": phone,
-                    "password": password
+                    "password": sha256Hash(password)
                 };
 
         
