@@ -6,14 +6,15 @@ import request_db as db
 from datetime import date
 
 class User(BaseModel):
-    userid: str
+    userid: int
     username: str
     email: str
     phone: str
     password: str
 
 class FamilyMember(BaseModel):
-    memberid: str
+    treeid: int
+    memberid: int
     fullname: str
     dateofbirth: date
     dateofdeath: date
