@@ -3,5 +3,6 @@ env/
 env/
 heritage-venv/
 .gitignore
-# i forgot which one it is
+__pycache__/
 env
+# i forgot which one it is
