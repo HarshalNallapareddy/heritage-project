@@ -3,13 +3,30 @@ from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 import mimetypes
 import request_db as db
+from datetime import date
 
 class User(BaseModel):
-    userid: str
+    userid: int
     username: str
     email: str
     phone: str
     password: str
+
+class FamilyMember(BaseModel):
+    treeid: int
+    memberid: int
+    fullname: str
+    dateofbirth: date
+    dateofdeath: date
+    pictureurl: str
+    streetaddress: str
+    city: str
+    state: str
+    country: str
+    zipcode: str
+    email: str
+    phone: str
+
 
 app = FastAPI()
 
@@ -84,7 +101,27 @@ async def generate_tree(username : str):
 
     return {"nodes": nodes, "connections": connections}
 
-    
+@app.delete("/deleteuser/{username}")
+async def delete_user(username: str):
+    userid = db.get_user_by_username(username)
+    if userid is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete_user(userid)
+
+@app.post("/addfamilymember/")
+async def add_family_member(member: FamilyMember):
+    default_values = {
+        "dateofdeath": "NULL",
+        "pictureurl": "NULL",
+        "streetaddress": "NULL",
+        "city": "NULL",
+        "state": "NULL",
+        "country": "NULL",
+        "zipcode": "NULL",
+        "email": "NULL",
+    }
+    member_sanitized = {key: default_values[key] if value is None else value for key, value in vars(member).items()}
+    db.add_family_member(treeid=member_sanitized.treeid, fullname=member_sanitized.fullname, dateofbirth=member_sanitized.dateofbirth, dateofdeath=member_sanitized.dateofdeath, pictureurl=member_sanitized.pictureurl, streetaddress=member_sanitized.streetaddress, city=member_sanitized.city, state=member_sanitized.state, country=member_sanitized.country, zipcode=member_sanitized.zipcode, email=member_sanitized.email, phone=member_sanitized.phone)
             
 
     
