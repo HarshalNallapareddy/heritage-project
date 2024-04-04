@@ -42,24 +42,36 @@
             <label id="password error" style="color: red; display: none;"></label>
         </form>
         <script>
+            var username = document.getElementById("username").value;
+            var password = document.getElementById("password1").value;
+            var conf_password = document.getElementById("password2").value;
+            var phone = document.getElementById("phone").value;
+            var email = document.getElementById("email").value;
+
             function validateForm(){
                 var errorMessage = document.getElementById("password error");
 
-                var password = document.getElementById("password1").value;
-                var conf_password = document.getElementById("password2").value;
+                username = document.getElementById("username").value;
+                password = document.getElementById("password1").value;
+                conf_password = document.getElementById("password2").value;
+                phone = document.getElementById("phone").value;
+                email = document.getElementById("email").value;
 
-                var phone = document.getElementById("phone").value;
-                var phone_pattern = "^\d{1}+\d{3}-\d{3}-\d{4}$";
-                var email = document.getElementById("email").value;
+                //var password = document.getElementById("password1").value;
+                //var conf_password = document.getElementById("password2").value;
+
+                //var phone = document.getElementById("phone").value;
+                var phone_pattern = "^[0-9]{1}\\+[0-9]{3}-[0-9]{3}-[0-9]{4}$";
+                //var email = document.getElementById("email").value;
                 var email_pattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
 
-                if(!email.match(email_pattern)){
+                if(email.match(email_pattern) == null){
                     errorMessage.textContent = "Please enter a valid email.";
                 }
                 else if(password !== conf_password){
                     errorMessage.textContent = "Passwords do not match.";
                 }
-                else if(!phone_pattern.match(phone)){
+                else if(phone.match(phone_pattern) == null){
                     errorMessage.textContent = "Please enter a valid phone number.";
                 }
                 else{
@@ -73,15 +85,22 @@
               event.preventDefault(); // Prevent the default form submission
 
               if(validateForm()){
-                const formData = new FormData(this);
-                const data = Object.fromEntries(formData.entries());
+                //const formData = new FormData(this);
+                //const data = Object.fromEntries(formData.entries());
+
+                const jsonObject = {
+                    username: username,
+                    email: email,
+                    phone: phone,
+                    password: password
+                };
         
                 fetch('/signup', {
                     method: 'POST',
                     headers: {
                     'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(data),
+                    body: jsonObject,
                 })
                 .then(response => response.json())
                 .then(data => {
