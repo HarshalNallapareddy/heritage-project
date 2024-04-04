@@ -47,29 +47,29 @@ async def login(username: str, password: str):
 
 @app.get("/generatetree/{username}")
 async def generate_tree(username : str):
-    treeID = db.get_treeId_from_username(username)
+    treeID = db.getTreeIDfromUserName(username)
     # list of memberIDs
-    family_members = db.get_familymemberIds_from_treeId(treeID)
+    family_members = db.getFamilyMemberIDsfromTreeID(treeID)
     # list of relationshipIDs
-    relationshipIds = db.get_relationships_from_treeId(treeID)
+    relationshipIds = db.getRelationshipIDsfromTreeID(treeID)
 
     connections = []
     for rel in relationshipIds:
-        rel_tuple = db.get_marriage_from_relationshipId(rel)
+        rel_tuple = db.getMarriagefromRelationshipID(rel)
         if rel_tuple is not None: # this means the relationship is a marriage
             new_connection = {}
             new_connection["type"] = "marriage"
-            new_connection["source"] = db.get_member_from_memberId(rel_tuple[2])
-            new_connection["target"] = db.get_member_from_memberId(rel_tuple[3])
+            new_connection["source"] = rel_tuple[2]
+            new_connection["target"] = rel_tuple[3]
             connections.append(new_connection)
         else:
-            rel_tuple = db.get_parent_child_from_relationshipId(rel)
+            rel_tuple = db.getParentChildfromRelationshipID(rel)
             if rel_tuple is None:
                 raise HTTPException(status_code=500, detail="Invalid relationship")
             new_connection = {}
             new_connection["type"] = "parent-child"
-            new_connection["source"] = db.get_member_from_memberId(rel_tuple[2])
-            new_connection["target"] = db.get_member_from_memberId(rel_tuple[3])
+            new_connection["source"] = rel_tuple[2]
+            new_connection["target"] = rel_tuple[3]
             connections.append(new_connection)
 
     nodes = []
@@ -79,7 +79,7 @@ async def generate_tree(username : str):
         new_node["id"] = memberId
         new_node["name"] = member[2]
         new_node["dateOfBirth"] = member[3]
-        new_node["hobbies"] = db.get_hobbies_from_memberId(memberId)
+        new_node["hobbies"] = db.getHobbyNamesfromMemberID(memberId)
         nodes.append(new_node)
 
     return {"nodes": nodes, "connections": connections}

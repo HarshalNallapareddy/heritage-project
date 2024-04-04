@@ -500,3 +500,71 @@ def get_all_users():
         print(e)
         return None
 
+def getTreeIDfromUserName(username):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT UserID FROM Users WHERE Username = %s",
+                       (username,))
+        userid = cursor.fetchone()[0] #tuple object
+        cursor.execute("SELECT TreeID FROM TreeAccess WHERE UserID = %s",
+                       (userid,))
+        return cursor.fetchone()[0]
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def getFamilyMemberIDsfromTreeID(treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT MemberID FROM FamilyMembers WHERE TreeID = %s",
+                       (treeid,))
+        return cursor.fetchall()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def getHobbyNamesfromMemberID(memberid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT HobbyName FROM Hobbies WHERE MemberID = %s",
+                       (memberid,))
+        return cursor.fetchall()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def getRelationshipIDsfromTreeID(treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT RelationshipID FROM Relationships WHERE TreeID = %s",
+                       (treeid,))
+        return cursor.fetchall()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def getMarriageIDfromRelationshipID(relationshipid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT MarriageID FROM Marriages WHERE RelationshipID = %s",
+                       (relationshipid,))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+
+def getParentChildIDfromRelationshipID(relationshipid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT ParentChildID FROM ParentChild WHERE RelationshipID = %s",
+                       (relationshipid,))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
