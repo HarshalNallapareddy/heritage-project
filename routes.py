@@ -22,10 +22,19 @@ app.add_middleware(
 )
 
 @app.post("/users/createuser/")
+async def signup(username: str, email: str, phone: str, password: str, conpassword: str):
+    print(username)
+    if password != conpassword:
+        raise HTTPException(status_code=401, detail="Passwords don't match.")
+    hash_password = hash(password)
+    db.add_user(username, email, phone, hash_password)
+    return {"message": "Sign up successful"}
+
+'''@app.post("/users/createuser/")
 async def login(user: User):
     print(user)
     user.password = hash(user.password)
-    db.add_user(user.userid, user.username, user.email, user.phone, user.password)
+    db.add_user(user.username, user.email, user.phone, user.password)'''
 
 @app.get("/users/getuser/{username}")
 async def get_user(username: str):
