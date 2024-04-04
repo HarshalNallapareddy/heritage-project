@@ -1,4 +1,6 @@
 /env
 env/
-env
+env/
+heritage-venv/
+.gitignore
 # i forgot which one it is
