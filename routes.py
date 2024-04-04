@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 import mimetypes
 import request_db as db
+from datetime import date
 
 class User(BaseModel):
     userid: str
@@ -10,6 +11,21 @@ class User(BaseModel):
     email: str
     phone: str
     password: str
+
+class FamilyMember(BaseModel):
+    memberid: str
+    fullname: str
+    dateofbirth: date
+    dateofdeath: date
+    pictureurl: str
+    streetaddress: str
+    city: str
+    state: str
+    country: str
+    zipcode: str
+    email: str
+    phone: str
+
 
 app = FastAPI()
 
@@ -84,7 +100,16 @@ async def generate_tree(username : str):
 
     return {"nodes": nodes, "connections": connections}
 
-    
+@app.delete("/deleteuser/{username}")
+async def delete_user(username: str):
+    userid = db.get_user_by_username(username)
+    if userid is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.delete_user(userid)
+
+@app.post("/addfamilymember/")
+async def add_family_member(member: FamilyMember):
+    db.add_family_member(member.fullname, member.dateofbirth, dateofdeath=member.dateofdeath, pictureurl=member.pictureurl, streetaddress=member.streetaddress, city=member.city, state=member.state, country=member.country, zipcode=member.zipcode, email=member.email, phone=member.phone)
             
 
     
