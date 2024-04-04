@@ -39,11 +39,11 @@ def add_tree_access(userid, treeid, accessrole):
         print(e)
         return None
     
-def add_family_member(treeid, fullname, dateofbirth, dateofdeath=None, pictureurl=None, streetaddress=None, city=None, state=None, country=None, zipcode=None, email=None, phone=None):
+def add_family_member(treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+        cursor.execute("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%d, %s, ?, ?, %s, %s, %s, %s, %s, %s, %s, %s)",
                        (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
         conn.commit()
         return cursor.lastrowid

@@ -110,7 +110,18 @@ async def delete_user(username: str):
 
 @app.post("/addfamilymember/")
 async def add_family_member(member: FamilyMember):
-    db.add_family_member(member.fullname, member.dateofbirth, dateofdeath=member.dateofdeath, pictureurl=member.pictureurl, streetaddress=member.streetaddress, city=member.city, state=member.state, country=member.country, zipcode=member.zipcode, email=member.email, phone=member.phone)
+    default_values = {
+        "dateofdeath": "NULL",
+        "pictureurl": "NULL",
+        "streetaddress": "NULL",
+        "city": "NULL",
+        "state": "NULL",
+        "country": "NULL",
+        "zipcode": "NULL",
+        "email": "NULL",
+    }
+    member_sanitized = {key: default_values[key] if value is None else value for key, value in vars(member).items()}
+    db.add_family_member(treeid=member_sanitized.treeid, fullname=member_sanitized.fullname, dateofbirth=member_sanitized.dateofbirth, dateofdeath=member_sanitized.dateofdeath, pictureurl=member_sanitized.pictureurl, streetaddress=member_sanitized.streetaddress, city=member_sanitized.city, state=member_sanitized.state, country=member_sanitized.country, zipcode=member_sanitized.zipcode, email=member_sanitized.email, phone=member_sanitized.phone)
             
 
     
