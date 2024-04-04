@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from pydantic import BaseModel, ValidationError
@@ -13,10 +13,33 @@ class User(BaseModel):
     password: str
 
 app = Flask(__name__)
-CORS(app)
+# CORS(app)
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+
+@app.route('/login_page')
+def login_page():
+    return render_template('login.html')
+
+@app.route('/tree')
+def tree():
+    return render_template('tree.html')
+
+@app.route('/signup')
+def signup():
+    return render_template('signup.html')
+
+@app.route('/add_family_member')
+def add_family_member():
+    return render_template('add_family_member.html')
+
 
 @app.route("/users/createuser/", methods=["POST"])
-def signup():
+def create_user():
     username = request.json.get("username")
     email = request.json.get("email")
     phone = request.json.get("phone")
