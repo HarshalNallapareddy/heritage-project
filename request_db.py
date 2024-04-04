@@ -56,7 +56,7 @@ def add_relationship(treeid):
     cursor = conn.cursor()
     try:
         cursor.execute("INSERT INTO Relationships (TreeID) VALUES (%s)",
-                       (treeid))
+                       (treeid,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -252,7 +252,7 @@ def delete_user(userid):
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM Users WHERE UserID = %s",
-                       (userid))
+                       (userid,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -264,7 +264,7 @@ def delete_tree(treeid):
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM FamilyTrees WHERE TreeID = %s",
-                       (treeid))
+                       (treeid,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -288,7 +288,7 @@ def delete_family_member(memberid):
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM FamilyMembers WHERE MemberID = %s",
-                       (memberid))
+                       (memberid,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -300,7 +300,7 @@ def delete_relationship(relationshipId):
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM Relationships WHERE RelationshipID = %s",
-                       (relationshipId))
+                       (relationshipId,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -312,7 +312,7 @@ def delete_marriagerelationship(marriageId):
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM Marriages WHERE MarriageID = %s",
-                       (marriageId))
+                       (marriageId,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -324,7 +324,7 @@ def delete_parentchildrelationship(parentchildId):
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM ParentChild WHERE ParentChildID = %s",
-                       (parentchildId))
+                       (parentchildId,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -336,7 +336,7 @@ def delete_hobbies(hobbyId):
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM Hobbies WHERE HobbyID = %s",
-                       (hobbyId))
+                       (hobbyId,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -348,7 +348,7 @@ def delete_searchhistory(searchId):
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM SearchHistory WHERE SearchID = %s",
-                       (searchId))
+                       (searchId,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -360,7 +360,7 @@ def delete_accesslogs(logId):
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM AccessLogs WHERE LogID = %s",
-                       (logId))
+                       (logId,))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -374,7 +374,7 @@ def get_user(userid):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM Users WHERE UserID = %s",
-                       (userid))
+                       (userid,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
@@ -385,7 +385,7 @@ def get_user_by_username(username):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM Users WHERE Username = %s",
-                       (username))
+                       (username,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
@@ -396,7 +396,7 @@ def get_tree(treeid):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM FamilyTrees WHERE TreeID = %s",
-                       (treeid))
+                       (treeid,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
@@ -418,7 +418,7 @@ def get_family_member(memberid):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM FamilyMembers WHERE MemberID = %s",
-                       (memberid))
+                       (memberid,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
@@ -429,7 +429,7 @@ def get_relationship(relationshipId):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM Relationships WHERE RelationshipID = %s",
-                       (relationshipId))
+                       (relationshipId,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
@@ -440,7 +440,7 @@ def get_marriagerelationship(marriageId):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM Marriages WHERE MarriageID = %s",
-                       (marriageId))
+                       (marriageId,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
@@ -451,7 +451,7 @@ def get_parentchildrelationship(parentchildId):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM ParentChild WHERE ParentChildID = %s",
-                       (parentchildId))
+                       (parentchildId,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
@@ -462,7 +462,7 @@ def get_hobbies(hobbyId):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM Hobbies WHERE HobbyID = %s",
-                       (hobbyId))
+                       (hobbyId,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
@@ -473,7 +473,7 @@ def get_searchhistory(searchId):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM SearchHistory WHERE SearchID = %s",
-                       (searchId))
+                       (searchId,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
@@ -484,7 +484,7 @@ def get_accesslogs(logId):
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT * FROM AccessLogs WHERE LogID = %s",
-                       (logId))
+                       (logId,))
         return cursor.fetchone()
     except mysql.connector.Error as e:
         print(e)
