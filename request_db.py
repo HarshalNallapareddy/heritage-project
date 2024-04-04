@@ -500,6 +500,8 @@ def get_all_users():
         print(e)
         return None
 
+# ------------------- OTHER ---------------------------------------
+
 def getTreeIDfromUserName(username):
     conn = db.create_connection()
     cursor = conn.cursor()
@@ -531,7 +533,8 @@ def getHobbyNamesfromMemberID(memberid):
     try:
         cursor.execute("SELECT HobbyName FROM Hobbies WHERE MemberID = %s",
                        (memberid,))
-        return cursor.fetchall()
+        hobbyname_tuples = cursor.fetchall()
+        return [hobbyname[0] for hobbyname in hobbyname_tuples]
     except mysql.connector.Error as e:
         print(e)
         return None
