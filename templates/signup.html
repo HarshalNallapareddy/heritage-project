@@ -95,18 +95,19 @@
                 //const data = Object.fromEntries(formData.entries());
 
                 const jsonObject = {
-                    username: username,
-                    email: email,
-                    phone: phone,
-                    password: sha256Hash(password)
+                    "username": username,
+                    "email": email,
+                    "phone": phone,
+                    "password": sha256Hash(password)
                 };
+
         
-                fetch('/signup', {
+                fetch('http://127.0.0.1:8000/users/createuser/', {
                     method: 'POST',
                     headers: {
                     'Content-Type': 'application/json',
                     },
-                    body: jsonObject,
+                    body: JSON.stringify(jsonObject),
                 })
                 .then(response => response.json())
                 .then(data => {
