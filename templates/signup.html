@@ -29,42 +29,63 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username">
+                    <input type="text" class="form-control" id="username" name="username" required>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="email" class="form-label">Email</label>
-                    <input type="text" class="form-control" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" id="email" name="email">
+                    <input type="text" class="form-control" id="email" name="email" required>
                 </div>
             </div>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="password1" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password1" name="password1">
+                    <input type="password" class="form-control" id="password1" name="password1" required>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label for="password2" class="form-label">Confirm Password</label>
-                    <input type="password" class="form-control" id="password2" name="password2">
+                    <input type="password" class="form-control" id="password2" name="password2" required>
                 </div>
             </div>
             <div class="mb-3">
                 <label for="phone" class="form-label">Phone Number (#+###-###-####) </label>
-                <input type="text" class="form-control" pattern="\d{1}+\d{3}-\d{3}-\d{4}" id="phone" name="phone">
+                <input type="text" class="form-control" id="phone" name="phone" required>
             </div>
-            <div style="align-items: center;">
-                <button type="submit" class="btn btn-primary" style="width: 150px; height: 50px;">Submit</button>
-            </div>
+            <button type="submit" class="btn btn-primary" style="width: 150px; height: 50px;">Submit</button>
+            <label id="password error" style="color: red; display: none;"></label>
         </form>
         <script>
+            function validateForm(){
+                var errorMessage = document.getElementById("password error");
+
+                var password = document.getElementById("password1").value;
+                var conf_password = document.getElementById("password2").value;
+
+                var phone = document.getElementById("phone").value;
+                var phone_pattern = "^\d{1}+\d{3}-\d{3}-\d{4}$";
+                var email = document.getElementById("email").value;
+                var email_pattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
+
+                if(!email.match(email_pattern)){
+                    errorMessage.textContent = "Please enter a valid email.";
+                }
+                else if(password !== conf_password){
+                    errorMessage.textContent = "Passwords do not match.";
+                }
+                else if(!phone_pattern.match(phone)){
+                    errorMessage.textContent = "Please enter a valid phone number.";
+                }
+                else{
+                    return true;
+                }
+                errorMessage.style.display = "block";
+                return false;
+            }
+
             document.getElementById('signupform').addEventListener('submit', function(event) {
               event.preventDefault(); // Prevent the default form submission
 
-              const password = document.getElementById("password1").value;
-              const conf_password = document.getElementById("password2").value;
 
-              if(password !== conf_password){
-                alert("Passwords do not match!");
-              }
-              else{
+              if(validateForm()){
                 const formData = new FormData(this);
                 const data = Object.fromEntries(formData.entries());
         
