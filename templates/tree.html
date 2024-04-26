@@ -2,6 +2,46 @@
 
 {% block content %}
     <h1>Your Family Tree</h1>
-    *Still working on this page*
+    <div id="familyTree">
+        <!-- Family tree data will be displayed here -->
+    </div>
 
+    <script>
+        // Function to make API call and display family tree
+        function getFamilyTree() {
+            fetch('/generatetree/frederick')
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    // Assuming you have a function to render the family tree
+                    renderFamilyTree(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Function to render family tree
+        function renderFamilyTree(data) {
+            // Access data and render your family tree here
+            // Example:
+            let familyTreeHTML = '<ul>';
+            data.nodes.forEach(node => {
+                familyTreeHTML += `<li>${node.name}`;
+                if (node.hobbies.length > 0) {
+                    familyTreeHTML += '<ul>';
+                    node.hobbies.forEach(hobby => {
+                        familyTreeHTML += `<li>${hobby}</li>`;
+                    });
+                    familyTreeHTML += '</ul>';
+                }
+                familyTreeHTML += `</li>`;
+            });
+            familyTreeHTML += '</ul>';
+            document.getElementById('familyTree').innerHTML = familyTreeHTML;
+        }
+
+        // Call getFamilyTree function when the page loads
+        window.onload = function() {
+            getFamilyTree();
+        };
+    </script>
 {% endblock %}
