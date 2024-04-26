@@ -6,31 +6,122 @@
 
         <div class="mb-3" style="padding-top: 1%;">
             <label for="relationship_type">Relationship Type: </label>
-            <select id="relationship_type" name="relationship_type">
-                <option value="Marriage">Marriage</option>
+            <select id="relationship_type" name="relationship_type" onchange="displayForm()">
+                <option value="Marriage" selected>Marriage</option>
                 <option value="Parent">Parent(s) and Child(s)</option>
             </select>
         </div>
 
-        <form id="addMarriageForm">
+        <form id="addMarriageForm" action="/users/createmarriage" method="POST">
             <h3>Please enter the following information: </h3>
             <div class="mb-3">
                 <label for="spouse1">Spouse 1's Name</label>
-                <input type="text" class="form-control" id="spouse1" name="spouse1">
-                <input type="hidden" class="form-control" id="spouse1name" name="spouse1name" value="">
+                <input type="text" class="form-control" id="spouse1" name="spouse1" required>
+
+                <!--div class="scrollable-container">
+                    <div class="list-group">
+                      <button type="button" class="list-group-item list-group-item-action">Button 1</button>
+                      <button type="button" class="list-group-item list-group-item-action">Button 2</button>
+                      <button type="button" class="list-group-item list-group-item-action">Button 3</button>
+                      <button type="button" class="list-group-item list-group-item-action">Button 4</button>
+                      <button type="button" class="list-group-item list-group-item-action">Button 5</button>
+                </div-->
+
+                <!--input type="hidden" class="form-control" id="spouse1name" name="spouse1name" value=""-->
             </div>
             <div class="mb-3">
                 <label for="spouse2">Spouse 2's Name</label>
-                <input type="text" class="form-control" id="spouse2" name="spouse2">
-                <input type="hidden" class="form-control" id="spouse2name" name="spouse2name" value="">
+                <input type="text" class="form-control" id="spouse2" name="spouse2" required>
+                <!--input type="hidden" class="form-control" id="spouse2name" name="spouse2name" value=""-->
+            </div>
+            <label style="color:red;" id="errorMarriage"></label>
+            <div class="mb-3" style="padding-top: 1%;">
+                <input class="btn btn-primary" type="submit" value="Submit">
+                <a class="btn btn-primary" href="{{url_for('tree')}}">Cancel</a>
             </div>
         </form>
 
-        <!--form id="addParentForm">
+        <form id="addParentForm">
+            <h3>Please enter the following information: </h3>
             <div class="mb-3">
-                <textarea id="me" name="message" rows="4" cols="50"></textarea>
+                <label for="parent">Parent's Name</label>
+                <input type="text" class="form-control" id="parent" name="parent" required>
+                <!--input type="hidden" class="form-control" id="spouse2name" name="spouse2name" value=""-->
             </div>
-        </form-->
+            <div class="mb-3">
+                <label for="child">Child's Name</label>
+                <input type="text" class="form-control" id="child" name="child" required>
+                <!--input type="hidden" class="form-control" id="spouse2name" name="spouse2name" value=""-->
+            </div>
+            <label style="color:red;" id="errorParent"></label>
+            <div class="mb-3" style="padding-top: 1%;">
+                <input class="btn btn-primary" type="submit" value="Submit" onclick="">
+                <a class="btn btn-primary" href="{{url_for('tree')}}">Cancel</a>
+            </div>
+        </form>
+
+        <script>
+            const select = document.getElementById("relationship_type");
+            const form1 = document.getElementById("addMarriageForm");
+            const form2 = document.getElementById("addParentForm");
+
+            form2.style.display = "none";
+
+            const errorMarriage = document.getElementById("errorMarriage");
+            const errorParent = document.getElementById("errorParent");
+
+            errorMarriage.style.display="none";
+            errorParent.style.display="none";
+
+            function displayForm(){
+                var selectValue = select.value;
+                if(selectValue == "Marriage"){
+                    form1.style.display = "block";
+                    form2.style.display = "none";
+                }
+                else if(selectValue == "Parent"){
+                    form2.style.display = "block";
+                    form1.style.display = "none";
+                }
+            }
+
+            function submitMarriage(){
+                var spouse1 = document.getElementById("spouse1").value;
+                var spouse2 = document.getElementById("spouse2").value;
+
+                fetch('/users/createmarriage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        spouse1: spouse1,
+                        spouse2: spouse2
+                    }),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Signup failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    // Handle success, e.g., displaying a success message or redirecting
+                })
+                .catch((error) => {
+                    errorMarriage.style.display = "block";
+                    errorMarriage.textContent = error;
+                    // Handle error, e.g., displaying an error message
+                });
+            }
+
+            document.getElementById("addMarriageForm").addEventListener('submit', function(event){
+                event.preventDefault();
+                submitMarriage();
+            });
+
+        </script>
     </main>
 </div>
 {% endblock %}

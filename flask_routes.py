@@ -90,6 +90,29 @@ def create_user():
     print(f"Created user successfully: {username, email, phone}")
     return jsonify({"message": "Sign up successful"})
 
+@app.route("/users/createmarriage/", methods=["POST"])
+def create_marriage():
+    print("sfdgfh")
+
+    try:
+        spouse1 = request.json.get("spouse1")
+        spouse2 = request.json.get("spouse2")
+
+        #userID = 15
+        treeID = 10
+
+        familymemberids = db.getFamilyMemberIDsfromTreeID(treeID)
+        spouseID1 = -1
+        spouseID2 = -1
+        print(familymemberids)
+        for memberID in familymemberids:
+            familymember = db.get_family_member(memberID)
+            print(familymember)
+
+        return jsonify({"message": "Sign up successful"})
+    except Exception as e:
+        print(f'e')
+        return jsonify({"message", "Signup not successful"}, 401)
 
 
 @app.route("/users/getuser/<username>", methods=["GET"])
