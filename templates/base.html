@@ -23,15 +23,16 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
+                    {% if session.username is none %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{url_for('login_page')}}">Login</a>
+                        </li>
+                    {% endif %}
                     <li class="nav-item">
-                        
-                        <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('login_page')}}">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a  class="nav-link" href="{{url_for('tree')}}">Family Tree</a>
+                        <a class="nav-link" href="{{url_for('tree')}}">Family Tree</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{url_for('add_family_member_page')}}">Add Family Member</a>

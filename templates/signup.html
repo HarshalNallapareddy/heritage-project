@@ -97,7 +97,8 @@
                 })
                 .then(data => {
                     console.log('Success:', data);
-                    // Handle success, e.g., displaying a success message or redirecting
+                    // Redirect to the tree_page upon successful signup
+                    window.location.href = '/tree';
                 })
                 .catch((error) => {
                     console.error('Error:', error);

@@ -31,8 +31,6 @@ class FamilyMember:
         self.phone = phone
 
 
-
-
 app = Flask(__name__)
 # CORS(app)
 
@@ -84,13 +82,29 @@ def create_user():
 
     print("hello")
 
+    # make sure user is not already in session
+    if 'username' in session:
+        return jsonify({"detail": "User already logged in"}), 401
+
     if password != conpassword:
         return jsonify({"detail": "Passwords don't match."}), 401
     # hash_password = hash(password)
+
+    
     hash_password = generate_password_hash(password).decode('utf-8')
     # print(hash_password)
     db.add_user(username, email, phone, hash_password)
+    session['username'] = username
+    #TODO: add userid and treeID to session
+
     print(f"Created user successfully: {username, email, phone}")
+
+
+
+
+    # add user to session
+    session['username'] = username
+
     return jsonify({"message": "Sign up successful"})
 
 
@@ -120,6 +134,7 @@ def login():
     if check_password_hash(stored_hashed_password, password):
         print("Login successful")
         session["username"] = username
+
         # return redirect(url_for('tree'))
         return jsonify({"message": "Login successful"})
 
