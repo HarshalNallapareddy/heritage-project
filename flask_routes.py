@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, session
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from pydantic import BaseModel, ValidationError
@@ -89,6 +89,8 @@ def create_user():
     # print(hash_password)
     db.add_user(username, email, phone, hash_password)
     print(f"Created user successfully: {username, email, phone}")
+    userid = db.get_user_by_username(username)[0]
+    add_access_log(userid, "create-user", "User created")
     return jsonify({"message": "Sign up successful"})
 
 
@@ -117,6 +119,7 @@ def login():
 
     if check_password_hash(stored_hashed_password, password):
         print("Login successful")
+        add_access_log(user[0], "login", "User logged in")
         return jsonify({"message": "Login successful"})
     else:
         print("Invalid username or password")
@@ -180,16 +183,18 @@ def generate_tree(username):
 
 @app.route("/deleteuser/<username>", methods=["DELETE"])
 def delete_user(username):
-    userid = db.get_user_by_username(username)
+    userid = db.get_user_by_username(username)[0]
     if userid is None:
         return jsonify({"detail": "User not found"}), 404
     db.delete_user(userid)
+    add_access_log(userid, "delete-user", "User deleted")
 
 
 @app.route("/addfamilymember/", methods=["POST"])
 def add_family_member():
     data = request.json
-    member = FamilyMember(data["treeid"], data["memberid"], data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
+    member = FamilyMember(data["treeid"], data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
+    
     default_values = {
         "dateofdeath": "NULL",
         "pictureurl": "NULL",
@@ -202,6 +207,7 @@ def add_family_member():
     }
     member_sanitized = {key: default_values[key] if value is None else value for key, value in vars(member).items()}
     db.add_family_member(treeid=member_sanitized.treeid, fullname=member_sanitized.fullname, dateofbirth=member_sanitized.dateofbirth, dateofdeath=member_sanitized.dateofdeath, pictureurl=member_sanitized.pictureurl, streetaddress=member_sanitized.streetaddress, city=member_sanitized.city, state=member_sanitized.state, country=member_sanitized.country, zipcode=member_sanitized.zipcode, email=member_sanitized.email, phone=member_sanitized.phone)
+    add_access_log(session["userID"], "add-family-member", "Family member " + str(member_sanitized.fullname) + " added")
     return jsonify({"message": "Family member added successfully"})
 
 @app.route("/getaccesslogs, methods=[GET]")
@@ -210,12 +216,11 @@ def get_access_logs():
     print(logs)
     return jsonify(logs)
 
-@app.route("/addaccesslog", methods=["POST"])
-def add_access_log():
+# Internal function
+def add_access_log(userid, actiontype, actiondetails):
     data = request.json
     time = datetime.now()
-    db.add_accesslogs(data["userid"], data["actiontype"], time, data["actiondetails"])
-    return jsonify({"message": "Access log added successfully"})
+    db.add_accesslogs(userid, actiontype, time, actiondetails)
 
 if __name__ == "__main__":
     app.run(debug=True)
