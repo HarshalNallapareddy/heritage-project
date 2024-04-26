@@ -493,6 +493,16 @@ def get_accesslogs(logId):
         print(e)
         return None
     
+def get_all_accesslogs():
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM AccessLogs")
+        return cursor.fetchall()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
 def get_all_users():
     conn = db.create_connection()
     cursor = conn.cursor()

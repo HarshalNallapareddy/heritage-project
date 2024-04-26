@@ -203,6 +203,11 @@ def add_family_member():
     db.add_family_member(treeid=member_sanitized.treeid, fullname=member_sanitized.fullname, dateofbirth=member_sanitized.dateofbirth, dateofdeath=member_sanitized.dateofdeath, pictureurl=member_sanitized.pictureurl, streetaddress=member_sanitized.streetaddress, city=member_sanitized.city, state=member_sanitized.state, country=member_sanitized.country, zipcode=member_sanitized.zipcode, email=member_sanitized.email, phone=member_sanitized.phone)
     return jsonify({"message": "Family member added successfully"})
 
+@app.route("/getaccesslogs, methods=[GET]")
+def get_access_logs():
+    logs = db.get_all_accesslogs()
+    print(logs)
+    return jsonify(logs)
 
 if __name__ == "__main__":
     app.run(debug=True)
