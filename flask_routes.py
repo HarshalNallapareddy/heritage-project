@@ -5,6 +5,7 @@ from pydantic import BaseModel, ValidationError
 import mimetypes
 import request_db as db
 from flask_bcrypt import generate_password_hash, check_password_hash
+import datetime
 
 class User(BaseModel):
     userid: str
@@ -208,6 +209,13 @@ def get_access_logs():
     logs = db.get_all_accesslogs()
     print(logs)
     return jsonify(logs)
+
+@app.route("/addaccesslog", methods=["POST"])
+def add_access_log():
+    data = request.json
+    time = datetime.now()
+    db.add_accesslogs(data["userid"], data["actiontype"], time, data["actiondetails"])
+    return jsonify({"message": "Access log added successfully"})
 
 if __name__ == "__main__":
     app.run(debug=True)
