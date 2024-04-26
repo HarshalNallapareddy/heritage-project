@@ -13,7 +13,7 @@
     <main class="container" style="width: 60%; padding-left: 10%; padding-right: 10%; margin-top: 5%;">
         <h1>Create a New Account</h1>
 
-        <form id="signupform">
+        <form id="signupform" action="/users/createuser" method="POST">
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label for="username" class="form-label">Username</label>
@@ -38,86 +38,72 @@
                 <label for="phone" class="form-label">Phone Number (#+###-###-####) </label>
                 <input type="text" class="form-control" id="phone" name="phone" required>
             </div>
-            <button type="submit" class="btn btn-primary" style="width: 150px; height: 50px;">Submit</button>
+            <!-- <button type="submit" class="btn btn-primary" style="width: 150px; height: 50px;" value>Submit</button> -->
+            <input type="submit" value="Submit">
+
             <label id="password error" style="color: red; display: none;"></label>
         </form>
+        
         <script>
-            var username = document.getElementById("username").value;
-            var password = document.getElementById("password1").value;
-            var conf_password = document.getElementById("password2").value;
-            var phone = document.getElementById("phone").value;
-            var email = document.getElementById("email").value;
-
-            function sha256Hash(input) {
-                const hash = crypto.createHash('sha256');
-                hash.update(input);
-                return hash.digest('hex');
-            }
-
-            function validateForm(){
+            document.getElementById('signupform').addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevent the default form submission
+        
+                var username = document.getElementById("username").value;
+                var password = document.getElementById("password1").value;
+                var conf_password = document.getElementById("password2").value;
+                var phone = document.getElementById("phone").value;
+                var email = document.getElementById("email").value;
+        
+                // Validate form data here as before
                 var errorMessage = document.getElementById("password error");
-
-                username = document.getElementById("username").value;
-                password = document.getElementById("password1").value;
-                conf_password = document.getElementById("password2").value;
-                phone = document.getElementById("phone").value;
-                email = document.getElementById("email").value;
-
-                //var password = document.getElementById("password1").value;
-                //var conf_password = document.getElementById("password2").value;
-
-                //var phone = document.getElementById("phone").value;
                 var phone_pattern = "^[0-9]{1}\\+[0-9]{3}-[0-9]{3}-[0-9]{4}$";
-                //var email = document.getElementById("email").value;
                 var email_pattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
-
+        
                 if(email.match(email_pattern) == null){
                     errorMessage.textContent = "Please enter a valid email.";
+                    errorMessage.style.display = "block";
+                    return false;
                 }
                 else if(password !== conf_password){
                     errorMessage.textContent = "Passwords do not match.";
+                    errorMessage.style.display = "block";
+                    return false;
                 }
                 else if(phone.match(phone_pattern) == null){
                     errorMessage.textContent = "Please enter a valid phone number.";
+                    errorMessage.style.display = "block";
+                    return false;
                 }
-                else{
-                    return true;
-                }
-                errorMessage.style.display = "block";
-                return false;
-            }
-
-            document.getElementById('signupform').addEventListener('submit', function(event) {
-              event.preventDefault(); // Prevent the default form submission
-
-              if(validateForm()){
-                //const formData = new FormData(this);
-                //const data = Object.fromEntries(formData.entries());
-
-                const jsonObject = {
-                    "username": username,
-                    "email": email,
-                    "phone": phone,
-                    "password": sha256Hash(password)
-                };
-
         
-                fetch('http://127.0.0.1:8000/users/createuser/', {
+                // If validation passes, proceed to submit the form data as JSON
+                fetch('/users/createuser', {
                     method: 'POST',
                     headers: {
-                    'Content-Type': 'application/json',
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(jsonObject),
+                    body: JSON.stringify({
+                        username: username,
+                        email: email,
+                        phone: phone,
+                        password: password,
+                        conpassword: conf_password // Ensure this matches the expected field in your Flask route
+                    }),
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Signup failed');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     console.log('Success:', data);
+                    // Handle success, e.g., displaying a success message or redirecting
                 })
                 .catch((error) => {
                     console.error('Error:', error);
+                    // Handle error, e.g., displaying an error message
                 });
-              }
             });
-          </script>
+        </script>
     </main>
 {% endblock %}

@@ -17,29 +17,39 @@
             <button type="submit" class="btn btn-primary">Login</button>
         </form>
     </main>
-    <script>
-      document.getElementById('loginForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent the default form submission
 
-        const formData = new FormData(this);
-        const data = Object.fromEntries(formData.entries());
+<script>
+  document.getElementById('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
 
-        fetch('/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Success:', data);
-          // Handle success (e.g., redirecting to another page)
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-          // Handle errors here
-        });
-      });
-    </script>
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+
+    fetch('/users/login/', { // Corrected endpoint
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Success:', data);
+      // Display success message or redirect
+      document.getElementById('loginForm').innerHTML += '<div class="alert alert-success" role="alert">Login successful!</div>';
+      // Optionally, redirect to another page
+      // window.location.href = '/some-success-page';
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+      // Display error message
+      document.getElementById('loginForm').innerHTML += '<div class="alert alert-danger" role="alert">Login failed. Please try again.</div>';
+    });
+  });
+</script>
 {% endblock %}

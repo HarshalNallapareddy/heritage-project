@@ -119,6 +119,9 @@ async def add_family_member(member: FamilyMember):
         "email": "NULL",
     }
     member_sanitized = {key: default_values[key] if value is None else value for key, value in vars(member).items()}
+    member_sanitized["dateofbirth"] = date.fromisoformat(member_sanitized["dateofbirth"])
+    if member_sanitized["dateofdeath"] != "NULL":
+        member_sanitized["dateofdeath"] = date.fromisoformat(member_sanitized["dateofdeath"])
     db.add_family_member(treeid=member_sanitized["treeid"], fullname=member_sanitized["fullname"], dateofbirth=member_sanitized["dateofbirth"], dateofdeath=member_sanitized["dateofdeath"], pictureurl=member_sanitized["pictureurl"], streetaddress=member_sanitized["streetaddress"], city=member_sanitized["city"], state=member_sanitized["state"], country=member_sanitized["country"], zipcode=member_sanitized["zipcode"], email=member_sanitized["email"], phone=member_sanitized["phone"])
             
 
