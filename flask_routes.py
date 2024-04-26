@@ -68,6 +68,11 @@ def add_family_member_page():
     # fetch json from generate_tree method
     return render_template('add_family_member.html')
 
+@app.route('/add_family_relationship')
+def add_family_relationship_page():
+    # fetch json from generate_tree method
+    return render_template('add_relationship.html')
+
 
 @app.route("/users/createuser/", methods=["POST"])
 def create_user():
@@ -161,7 +166,7 @@ def generate_tree(username):
 
         connections = []
         for rel in relationshipIds:
-            rel_tuple = db.getMarriagefromRelationshipID(rel)
+            rel_tuple = db.getMarriagefromRelationshipID(rel[0])
             if rel_tuple is not None:  # this means the relationship is a marriage
                 new_connection = {}
                 new_connection["type"] = "marriage"
@@ -169,7 +174,7 @@ def generate_tree(username):
                 new_connection["target"] = rel_tuple[3]
                 connections.append(new_connection)
             else:
-                rel_tuple = db.getParentChildfromRelationshipID(rel)
+                rel_tuple = db.getParentChildfromRelationshipID(rel[0])
                 if rel_tuple is None:
                     return jsonify({"detail": "Invalid relationship"}), 500
                 new_connection = {}
@@ -178,14 +183,15 @@ def generate_tree(username):
                 new_connection["target"] = rel_tuple[3]
                 connections.append(new_connection)
 
+
         nodes = []
         for memberId in family_members:
             new_node = {}
-            member = db.get_family_member(memberId)
+            member = db.get_family_member(memberId[0])
             new_node["id"] = memberId
             new_node["name"] = member[2]
             new_node["dateOfBirth"] = member[3]
-            new_node["hobbies"] = db.getHobbyNamesfromMemberID(memberId)
+            new_node["hobbies"] = db.getHobbyNamesfromMemberID(memberId[0])
             nodes.append(new_node)
 
         return_dict = {"nodes": nodes, "connections": connections}
