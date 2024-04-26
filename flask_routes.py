@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, redirect, session, jsonify, render_template, url_for
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from pydantic import BaseModel, ValidationError
@@ -46,6 +46,12 @@ def index():
 def login_page():
     return render_template('login.html')
 
+
+@app.route('/logout')
+def logout():
+    session.pop("username", None) # clear username variable from session
+    return render_template('login.html')
+
 @app.route('/tree')
 def tree():
     json_data = generate_tree("john")
@@ -53,9 +59,11 @@ def tree():
     print(json_data)
     return render_template('tree.html', json_data=json_data)
 
+
 @app.route('/signup')
 def signup():
     return render_template('signup.html')
+
 
 @app.route('/add_family_member')
 def add_family_member_page():
@@ -111,7 +119,10 @@ def login():
 
     if check_password_hash(stored_hashed_password, password):
         print("Login successful")
+        session["username"] = username
+        # return redirect(url_for('tree'))
         return jsonify({"message": "Login successful"})
+
     else:
         print("Invalid username or password")
         return jsonify({"detail": "Invalid username or password"}), 401
@@ -199,4 +210,5 @@ def add_family_member():
 
 
 if __name__ == "__main__":
+    app.secret_key = "super secret"
     app.run(debug=True)
