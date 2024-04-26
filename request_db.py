@@ -43,9 +43,12 @@ def add_family_member(treeid, fullname, dateofbirth, dateofdeath, pictureurl, st
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%d, %s, ?, ?, %s, %s, %s, %s, %s, %s, %s, %s)",
+        # sql = "INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%d, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        # print(sql % (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
+        cursor.execute("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                        (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
         conn.commit()
+        print("Family Member added successfully")
         return cursor.lastrowid
     except mysql.connector.Error as e:
         print(e)
