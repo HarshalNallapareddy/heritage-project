@@ -2,6 +2,42 @@
 
 {% block content %}
 
+<h1>Access Logs</h1>
+    <div id="accessLogs"></div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            fetchAccessLogs();
+        });
+
+        function fetchAccessLogs() {
+            fetch('/getaccesslogs')
+                .then(response => response.json())
+                .then(logs => {
+                    const accessLogsDiv = document.getElementById('accessLogs');
+                    accessLogsDiv.innerHTML = ''; // Clear previous logs
+                    if (logs.length === 0) {
+                        accessLogsDiv.innerHTML = '<p>No access logs available.</p>';
+                    } else {
+                        const logsHTML = logs.map(log => {
+                            const date = new Date(log.time).toLocaleString();
+                            return `<div>
+                                        <p><strong>User ID:</strong> ${log.userid}</p>
+                                        <p><strong>Action Type:</strong> ${log.actiontype}</p>
+                                        <p><strong>Action Details:</strong> ${log.actiondetails}</p>
+                                        <p><strong>Time:</strong> ${date}</p>
+                                    </div>`;
+                        }).join('');
+                        accessLogsDiv.innerHTML = logsHTML;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching access logs:', error);
+                });
+        }
+
+        // Automatically refresh access logs every 5 seconds
+        setInterval(fetchAccessLogs, 5000);
+    </script>
 
 {% endblock %}
