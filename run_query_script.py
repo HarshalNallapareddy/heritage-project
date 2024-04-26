@@ -28,13 +28,18 @@ def main():
         return
 
     # Example query
-
+    username = 'frederick'
+    cursor = connection.cursor()
+    print("Connection established")
     # Run the query
-    result = run_query(connection, query)
-    if result is not None:
-        print("Query result:")
-        for row in result:
-            print(row)
+    cursor.execute("SELECT UserID FROM Users WHERE Username = %s",
+                    (username,))
+    userid = cursor.fetchone()[0] #tuple object
+    cursor.fetchall()
+    print("got userid: " + str(userid))
+    cursor.execute("SELECT TreeID FROM TreeAccess WHERE UserID = %s",
+                    (userid,))
+    print(cursor.fetchone()[0])
 
     # Close the connection
     connection.close()
