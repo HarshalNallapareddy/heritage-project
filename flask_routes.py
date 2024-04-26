@@ -62,6 +62,11 @@ def add_family_member_page():
     # fetch json from generate_tree method
     return render_template('add_family_member.html')
 
+@app.route('/add_family_relationship')
+def add_family_relationship_page():
+    # fetch json from generate_tree method
+    return render_template('add_relationship.html')
+
 
 @app.route("/users/createuser/", methods=["POST"])
 def create_user():
