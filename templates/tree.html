@@ -142,26 +142,34 @@ function selectLink(event, d) {
 
         // Function to make API call and display family tree
         async function getFamilyTree() {
-        
-            // fetch data
-            // make an API call to get the family tree data
-            try {
-        // Make an API call to get the family tree data and wait for it to complete
-        const response = await fetch('/generatetree/');
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        data = await response.json();  // Parse JSON data from the response
+            data = null;
+            // location.reload();
 
-        console.log(data);  // Now `data` is available and logged correctly
-        renderFamilyTree(data);  // Now `data` is passed correctly
-    } catch (error) {
-        console.error('Failed to fetch the family tree data:', error);
-    }
+            try {
+                // Make an API call to get the family tree data and wait for it to complete
+                const response = await fetch('/generatetree/');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                data = await response.json();  // Parse JSON data from the response
+
+                console.log(data);  // Now `data` is available and logged correctly
+                renderFamilyTree(data);  // Now `data` is passed correctly
+                    } 
+
+            catch (error) {
+                console.error('Failed to fetch the family tree data:', error);
+            }
+
         }
 
         // Function to render family tree using D3.js
         function renderFamilyTree(data) {
+
+            const network = document.getElementById('network');
+            network.innerHTML = '';  // Clear existing SVG to prevent duplication
+
+
             const width = document.getElementById('network').clientWidth;
             const height = document.getElementById('network').clientHeight;
             // const svg = d3.select("#network").append("svg")
@@ -175,31 +183,19 @@ function selectLink(event, d) {
     .attr("height", height)
     .call(d3.zoom().on("zoom", (event) => {
         svg.attr("transform", event.transform);
-    }))
-    .append("g");
+    })).append("g");
 
     
             const nodes = data.nodes;
             const links = data.connections;
 
-            // const simulation = d3.forceSimulation(nodes)
-            //          .force("link", d3.forceLink(links).id(d => d.id).distance(300)) // Increase link distance
-            //          .force("charge", d3.forceManyBody().strength(-200)) // Increase repulsive force
-            //          .force("center", d3.forceCenter(width / 2, height / 2));
 
 
-                     const simulation = d3.forceSimulation(nodes)
+            const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(200)) // Increased link distance
         .force("charge", d3.forceManyBody().strength(-500)) // Increased repulsive force
         .force("center", d3.forceCenter(width / 2, height / 2))
         .force("collide", d3.forceCollide().radius(100)); // Added collision force to avoid overlap
-
-
-    //         const simulation = d3.forceSimulation(nodes)
-    // .force("charge", d3.forceManyBody().strength(-300))  // Adjust this value as needed
-    // .force("center", d3.forceCenter(width / 2, height / 2))
-    // .force("collide", d3.forceCollide().radius(function(d) { return d.radius + 10; }));
-
 
 
 
@@ -485,9 +481,16 @@ const link = svg.selectAll(".link")
         document.getElementById('pathResults').innerHTML = data.message;
         if (response.ok) {
             console.log('Relationship deleted successfully');
+            // window.location.href = '/tree';
+            // window.location.assign('/tree');
+            window.location.replace('/tree');
+
+
         } else {
             console.error('Error:', data.message);
         }
+        // data = null;
+        getFamilyTree();
     })
     .catch((error) => {
         console.error('Error:', error);
@@ -495,12 +498,14 @@ const link = svg.selectAll(".link")
     });
 
     selectedLink = null; // Reset selected link after deletion
-    location.reload(); // Reload the page to update the visualization
+    // getFamilyTree();
+    location.reload(true);
+    // reloadFamilyTree();
 }
 
 
 
-        function submitPathFind() {
+    function submitPathFind() {
             if (selectedNodes.length === 2) {
                 // Implement API call or logic to find the path
                 const pathText = `Path found between members: ${selectedNodes.join(' and ')}`;
@@ -531,109 +536,112 @@ const link = svg.selectAll(".link")
             },
             body: JSON.stringify({spouse1_id: node1, spouse2_id: node2})
         })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('pathResults').innerHTML = data.message;
-            if (response.ok) {
-                console.log('Marriage Creation successful');
-            } else {
-                console.error('Error:', data.message);
-            }
-        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
+    .then(result => {
+        document.getElementById('pathResults').innerHTML = result.data.message;
+        if (result.ok) {
+            console.log('marriage-Child Creation successful');
+            window.location.replace('/tree');
+        } else {
+            console.error('Error:', result.data.message);
+        }
+
+        getFamilyTree(); // Ensure this function is defined and handles post-action updates correctly
+    })
         .catch((error) => {
             console.error('Error:', error);
         });
 
         selectedNodes = []; // Reset the selected nodes
-//         setTimeout(function() {
-//   // Code to execute after the pause
-//   console.log("1 second has passed.");
-// }, 1000);  // The time delay is in milliseconds, so 1000 ms is 1 second.
 
-        location.reload(); // Reload the page
     }
-
 
 
     function submitParentChildRelationshipToAdd() {
-        if (selectedNodes.length !== 2) {
-            document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
-            return;
-        }
-
-        let node1 = selectedNodes[0];
-        let node2 = selectedNodes[1];
-
-        console.log('Adding parent-child relationship between:', node1, node2);
-
-        fetch('/createparentchild', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({parent_id: node1, child_id: node2})
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('pathResults').innerHTML = data.message;
-            if (response.ok) {
-                console.log('Parent-Child Creation successful');
-            } else {
-                console.error('Error:', data.message);
-            }
-        })
-        .catch((error) => {
-            console.error('Error:', error);
-        });
-
-        selectedNodes = []; // Reset the selected nodes
-//         setTimeout(function() {
-//   // Code to execute after the pause
-//   console.log("1 second has passed.");
-// }, 1000);  // The time delay is in milliseconds, so 1000 ms is 1 second.
-
-        location.reload(); // Reload the page
-
+    if (selectedNodes.length !== 2) {
+        document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+        return;
     }
 
+    let node1 = selectedNodes[0];
+    let node2 = selectedNodes[1];
+
+    console.log('Adding parent-child relationship between:', node1, node2);
+
+    fetch('/createparentchild', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({parent_id: node1, child_id: node2})
+    })
+    .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
+    .then(result => {
+        document.getElementById('pathResults').innerHTML = result.data.message;
+        if (result.ok) {
+            console.log('Parent-Child Creation successful');
+            window.location.replace('/tree');
+        } else {
+            console.error('Error:', result.data.message);
+        }
+
+        getFamilyTree(); // Ensure this function is defined and handles post-action updates correctly
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+    });
+
+    selectedNodes = []; // Reset the selected nodes
+
+    // It seems you have multiple reload commands which are redundant and might cause unwanted behavior.
+    // Commented one out for you:
+    // location.reload(true); // Reload the page to update the visualization
+}
 
 
-        // function submitMarriageRelationshipToAdd(){
-        //     // read the selected nodes
-        //     // make an API call to add the relationship
-        //     if (selectedNodes.length !== 2) {
-        //         document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
-        //         return;
-        //     }
 
-        //     let node1 = selectedNodes[0];
-        //     let node2 = selectedNodes[1];
+    // function submitParentChildRelationshipToAdd() {
+    //     if (selectedNodes.length !== 2) {
+    //         document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+    //         return;
+    //     }
 
-        //     console.log('Adding marriage relationship between:', node1, node2);
-        //     selectedNodes = [];
+    //     let node1 = selectedNodes[0];
+    //     let node2 = selectedNodes[1];
 
-        //     // reset the selected nodes
+    //     console.log('Adding parent-child relationship between:', node1, node2);
 
-        //     // update text
-        //     location.reload(); // relaod the page
-        // }
+    //     fetch('/createparentchild', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         },
+    //         body: JSON.stringify({parent_id: node1, child_id: node2})
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         document.getElementById('pathResults').innerHTML = data.message;
+    //         if (response.ok) {
+    //             console.log('Parent-Child Creation successful');
+    //             // window.location.href = '/tree';
+    //             // window.location.assign('/tree');
+    //             window.location.replace('/tree');
 
+    //         } else {
+    //             console.error('Error:', data.message);
+    //         }
 
-        // function submitParentChildRelationshipToAdd(){
-        //     if (selectedNodes.length !== 2) {
-        //         document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
-        //         return;
-        //     }
-        //     // read the selected nodes
-        //     // make an API call to add the relationship
-        //     let node1 = selectedNodes[0];
-        //     let node2 = selectedNodes[1];
+    //         getFamilyTree();
+    //     })
+    //     .catch((error) => {
+    //         console.error('Error:', error);
+    //     });
 
-        //     console.log('Adding parent-child relationship between:', node1, node2);
-        //     selectedNodes = [];
+    //     selectedNodes = []; // Reset the selected nodes
 
-        //     location.reload();
-        // }
+    //     location.reload(true); // Reload the page to update the visualization
+    //     location.reload(true);
+    // }
 
     
 
