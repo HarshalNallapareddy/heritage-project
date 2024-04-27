@@ -96,12 +96,8 @@
 
 <script>
 
-
-
-        // Function to make API call and display family tree
-        function getFamilyTree() {
-            // Mock data for demonstration purposes
-            const data = {
+let selectedNodes = [];
+let data =  {
                 nodes: [
                     {id: 1, name: 'Jimmy Bob', dateOfBirth: 'Mon, 27 Feb 1967 00:00:00 GMT', hobbies: ['tennis', 'golf']},
                     {id: 2, name: 'Alice Bob', dateOfBirth: 'Tue, 27 Feb 1968 00:00:00 GMT', hobbies: ['reading', 'painting']},
@@ -118,6 +114,9 @@
                 ]
             };
 
+        // Function to make API call and display family tree
+        function getFamilyTree() {
+            // Mock data for demonstration purposes
             renderFamilyTree(data);
         }
 
@@ -210,8 +209,6 @@ const link = svg.selectAll(".link")
             node.on('click', (event, d) => {selectNode(d.id);});
 
 
-
-
             // Add node labels (family member names)
             const nodeLabels = svg.selectAll(".node-label")
                                   .data(nodes)
@@ -220,9 +217,6 @@ const link = svg.selectAll(".link")
                                   .attr("dx", "0.25em")
                                   .attr("dy", ".25em")
                                   .text(d => d.name);
-
-
-
 
 
             simulation.on("tick", () => {
@@ -269,13 +263,20 @@ const link = svg.selectAll(".link")
             }
         }
 
-        // Function to change tab content
-        function changeTabContent(tabName) {
-            // Update the function-specific content
-            const functionContent = document.getElementById('function-content');
-            functionContent.textContent = `${tabName} Content`;
 
-            // Update the active tab styling
+        function changeTabContent(tabName) {
+            const functionContent = document.getElementById('function-content');
+            if (tabName === 'Find Path') {
+                functionContent.innerHTML = `
+                    <p>Click on two family members to find the path between them.</p>
+
+                    <button onclick="submitPathFind()">Find Path</button>
+                    <div id="pathResults"></div>
+                `;
+            } else {
+                functionContent.textContent = `${tabName} Content`;
+            }
+
             const tabs = document.querySelectorAll('.tab');
             tabs.forEach(tab => {
                 if (tab.textContent === tabName) {
@@ -285,6 +286,43 @@ const link = svg.selectAll(".link")
                 }
             });
         }
+
+
+
+        function selectNode(nodeId) {
+            console.log('Selected node:', nodeId);
+            if (selectedNodes.length < 2) {
+                selectedNodes.push(nodeId);
+
+                // add code to display selected nodes
+            } else {
+                selectedNodes = [nodeId];
+            }
+
+            let familyMemberNames = data.nodes.filter(node => selectedNodes.includes(node.id)).map(node => node.name);
+            document.getElementById('pathResults').innerHTML = `Selected members are ${familyMemberNames.join(' and ')}`;
+        }
+
+
+        function submitPathFind() {
+            if (selectedNodes.length === 2) {
+                // Implement API call or logic to find the path
+                const pathText = `Path found between members: ${selectedNodes.join(' and ')}`;
+                document.getElementById('pathResults').innerHTML = pathText;
+                selectedNodes = []; // Reset for next search
+            } else {
+                document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+            }
+        }
+
+
+
+
+        function submitRelationshipToAdd(){
+
+        }
+
+
 
         // Call getFamilyTree function when the page loads
         getFamilyTree();
