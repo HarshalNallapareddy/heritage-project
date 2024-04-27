@@ -37,8 +37,8 @@
             border-right: 1px solid lightgray;
         }
         #details {
-            width: 30%;
-            padding: 10px;
+            width: 10%;
+            padding: 5px;
             overflow-y: auto;
         }
         #functions {
@@ -91,25 +91,49 @@
         <div class="tab" onclick="changeTabContent('Add Relationship')">Add Relationship</div>
         <div class="tab" onclick="changeTabContent('Find Path')">Find Path</div>
     </div>
-    <div id="function-content">Function-Specific Content</div>
+    <div id="function-content">
+        <p>Click on a user to update their information.</p>
+        <button onclick="submitUpdateUser()">Update User</button>
+        <div id="pathResults"></div>
+    </div>
 
 
 <script>
 
 let selectedNodes = [];
+
+let selectedLink = null;
+
+let currTab = 'Update User';
+
+
+
+// Function to select a link when clicked
+function selectLink(event, d) {
+    selectedLink = d;
+    console.log('Selected link:', d);
+    // Display details about the selected link in some UI element, e.g., a sidebar or modal
+    if(currTab === 'Delete Relationship'){
+        console.log('Deleting relationship:', d);
+        document.getElementById('pathResults').innerHTML = `Selected relationship: <b>${d.type}</b> between <b>${d.source.name}</b> and <b>${d.target.name}</b>`;
+    }
+}
+
+
+
 let data =  {
                 nodes: [
                     {id: 1, name: 'Jimmy Bob', dateOfBirth: 'Mon, 27 Feb 1967 00:00:00 GMT', hobbies: ['tennis', 'golf']},
                     {id: 2, name: 'Alice Bob', dateOfBirth: 'Tue, 27 Feb 1968 00:00:00 GMT', hobbies: ['reading', 'painting']},
                     {id: 3, name: 'Bob Bob', dateOfBirth: 'Wed, 27 Feb 1969 00:00:00 GMT', hobbies: ['swimming', 'hiking']},
                     {id: 4, name: 'Charlie Bob', dateOfBirth: 'Thu, 27 Feb 1970 00:00:00 GMT', hobbies: ['cooking', 'gardening']}
-                    // ... more nodes
                 ],
+
                 connections: [
-                    {source: 1, target: 2, type: 'marriage'},
-                    {source: 1, target: 3, type: 'parent-child'},
-                    {source: 2, target: 3, type: 'parent-child'},
-                    {source: 1, target: 4, type: 'parent-child'}
+                    {rel_id: 0, source: 1, target: 2, type: 'marriage'},
+                    {rel_id: 1, source: 1, target: 3, type: 'parent-child'},
+                    {rel_id: 2, source: 2, target: 3, type: 'parent-child'},
+                    {rel_id: 3, source: 1, target: 4, type: 'parent-child'}
 
                 ]
             };
@@ -119,8 +143,6 @@ let data =  {
             // Mock data for demonstration purposes
             renderFamilyTree(data);
         }
-
-
 
         // Function to render family tree using D3.js
         function renderFamilyTree(data) {
@@ -142,7 +164,6 @@ let data =  {
 
 
 
-
 const link = svg.selectAll(".link")
             .data(links)
             .enter().append("line")
@@ -158,7 +179,10 @@ const link = svg.selectAll(".link")
             })
             .style("stroke-width", 4)
             .on('mouseover', linkMouseover) // Updated to use the function
-            .on('mouseout', linkMouseout);
+            .on('mouseout', linkMouseout)
+            .on('click', selectLink);
+
+
 
     const linkLabels = svg.selectAll(".link-label")
             .data(links)
@@ -166,7 +190,8 @@ const link = svg.selectAll(".link")
             .attr("class", "link-label")
             .text(d => d.type)
             .on('mouseover', linkMouseover) // Attach the same mouseover event
-            .on('mouseout', linkMouseout);
+            .on('mouseout', linkMouseout)
+            .on('click', selectLink);  // Add click event handler to labels as well;
 
     // Function to handle mouseover event on links and labels
     function linkMouseover(event, d) {
@@ -265,6 +290,11 @@ const link = svg.selectAll(".link")
 
 
         function changeTabContent(tabName) {
+            currTab = tabName;
+
+            selectedNodes = [];
+            selectedLink = null;
+            
             const functionContent = document.getElementById('function-content');
             if (tabName === 'Find Path') {
                 functionContent.innerHTML = `
@@ -273,7 +303,41 @@ const link = svg.selectAll(".link")
                     <button onclick="submitPathFind()">Find Path</button>
                     <div id="pathResults"></div>
                 `;
-            } else {
+            } 
+
+            else if (tabName === 'Add Relationship') {
+                functionContent.innerHTML = `
+                    <p>Click on two family members to add a relationship between them.</p>
+
+                    <button onclick="submitMarriageRelationshipToAdd()">Add Marriage Relationship</button>
+                    <button onclick="submitParentChildRelationshipToAdd()">Add Parent-Child Relationship</button>
+
+                    <div id="pathResults"></div>`;
+            } 
+
+            else if (tabName === 'Delete Relationship'){
+                functionContent.innerHTML = `
+                    <p>Click on a relationship to delete it.</p>
+                    <button onclick="deleteRelationship()">Delete Relationship</button>
+                    <div id="pathResults"></div>`;
+            }
+
+            else if (tabName === 'Add User'){
+                functionContent.innerHTML = `
+                <button onclick="submitAddUser()">Go to Add User Form</button>`;
+            }
+
+            else if (tabName === 'Update User'){
+                functionContent.innerHTML = `
+                    <p>Click on a user to update their information.</p>
+                    <button onclick="submitUpdateUser()">Update User</button>
+                    <div id="pathResults"></div>`;
+                }
+
+            
+            
+            
+            else {
                 functionContent.textContent = `${tabName} Content`;
             }
 
@@ -289,19 +353,93 @@ const link = svg.selectAll(".link")
 
 
 
+
         function selectNode(nodeId) {
             console.log('Selected node:', nodeId);
-            if (selectedNodes.length < 2) {
-                selectedNodes.push(nodeId);
+            
 
-                // add code to display selected nodes
-            } else {
+
+            if (currTab == 'Add Relationship' || currTab == 'Find Path'){
+                // check if the selected nodes are already selected
+                // if so, remove the selection
+                // if not, add the selection
+                // if two nodes are already selected, remove the selection and add the new selection
+                // if two nodes are already selected and one of them is the new selection, remove the selection and add the new selection
+            
+            if (selectedNodes.length == 2){
+                selectedNodes = [];
+            }
+
+            if (selectedNodes.length < 2 && !selectedNodes.includes(nodeId)) {
+                selectedNodes.push(nodeId);
+            } 
+            
+            else if (selectedNodes.length === 2 && selectedNodes.includes(nodeId)){
                 selectedNodes = [nodeId];
             }
 
-            let familyMemberNames = data.nodes.filter(node => selectedNodes.includes(node.id)).map(node => node.name);
+            // let familyMemberNames = data.nodes.filter(node => selectedNodes.includes(node.id)).map(node => node.name);
+            // make sure names are added in proper order
+            let familyMemberNames = [];
+            for (let i = 0; i < selectedNodes.length; i++){
+                let node = data.nodes.find(node => node.id === selectedNodes[i]);
+                familyMemberNames.push(node.name);
+            }
+
+
             document.getElementById('pathResults').innerHTML = `Selected members are ${familyMemberNames.join(' and ')}`;
+
+            console.log('Selected nodes:', selectedNodes);
         }
+
+
+        else if (currTab == 'Update User'){
+            // make an API call to get the user details
+            // populate the form with the user details
+            // submit the form to update the user details
+            console.log('Updating user:', nodeId);
+
+            selectedNodes = [];
+
+            // add selected node to the array
+            selectedNodes.push(nodeId);
+
+
+            let familyMemberNames = [];
+            for (let i = 0; i < selectedNodes.length; i++){
+                let node = data.nodes.find(node => node.id === selectedNodes[i]);
+                familyMemberNames.push(node.name);
+            }
+
+            document.getElementById('pathResults').innerHTML = `Selected member is ${familyMemberNames.join(' and ')}`;
+
+            console.log('Selected nodes:', selectedNodes);
+        }
+
+        }
+
+
+
+
+
+
+
+
+
+        //////////////// Method to interact with server API ////////////////
+
+        function deleteRelationship(relId){
+            // make an API call to delete the relationship
+            if (selectedLink) {
+            console.log('Deleting relationship:', selectedLink);
+            // Here you would ideally make an API call to delete the relationship from the database
+            selectedLink = null; // Reset selected link after deletion
+            location.reload(); // Reload the page to update the visualization
+            } else {
+                document.getElementById('pathResults').innerHTML = 'No relationship selected.';
+            }
+        }
+
 
 
         function submitPathFind() {
@@ -316,13 +454,62 @@ const link = svg.selectAll(".link")
         }
 
 
+        function submitMarriageRelationshipToAdd(){
+            // read the selected nodes
+            // make an API call to add the relationship
 
 
-        function submitRelationshipToAdd(){
+            if (selectedNodes.length !== 2) {
+                document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+                return;
+            }
 
+            let node1 = selectedNodes[0];
+            let node2 = selectedNodes[1];
+
+            console.log('Adding marriage relationship between:', node1, node2);
+            selectedNodes = [];
+
+            // reset the selected nodes
+
+            // update text
+            location.reload(); // relaod the page
         }
 
 
+
+        function submitParentChildRelationshipToAdd(){
+
+            if (selectedNodes.length !== 2) {
+                document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+                return;
+            }
+
+            // read the selected nodes
+            // make an API call to add the relationship
+            let node1 = selectedNodes[0];
+            let node2 = selectedNodes[1];
+
+            console.log('Adding parent-child relationship between:', node1, node2);
+            selectedNodes = [];
+
+            location.reload();
+        }
+
+
+        function submitUpdateUser(){
+            // redirect to form with user queries
+            if(selectedNodes.length === 1){
+                console.log('Updating user:', selectedNodes[0]);
+                selectedNodes = [];
+
+                location.reload();
+            }
+
+            else {
+                document.getElementById('pathResults').innerHTML = 'Please select a node.';
+            }
+        }
 
         // Call getFamilyTree function when the page loads
         getFamilyTree();
