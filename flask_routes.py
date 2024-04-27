@@ -217,65 +217,87 @@ def login():
         return jsonify({"detail": "Invalid username or password"}), 401
 
 
+
 @app.route("/generatetree/", methods=["GET"])
 def generate_tree():
     try:
-        # treeID = db.getTreeIDfromUserName(session.user)
-        # list of memberIDs
-
-        print("session", session)
-        family_members = db.getFamilyMemberIDsfromTreeID(session['treeid'])
-        # list of relationshipIDs
-        relationshipIds = db.getRelationshipIDsfromTreeID(session['treeid'])
-
-        connections = []
-        for rel in relationshipIds:
-            print("rel", rel)
-            rel_tuple = db.getMarriagefromRelationshipID(rel[0])
-            if rel_tuple is not None:  # this means the relationship is a marriage
-                new_connection = {}
-                new_connection["type"] = "marriage"
-                new_connection["rel_id"] = rel_tuple[1]
-                new_connection["source"] = rel_tuple[2]
-                new_connection["target"] = rel_tuple[3]
-                connections.append(new_connection)
+        response = db.get_tree_data(session['treeid'])
+        if len(response) == 0:
+            return jsonify({"detail": "No data found"}), 404
+        
+        else:
+            if "detail" in response:
+                return jsonify(response), 500
             else:
-                rel_tuple = db.getParentChildfromRelationshipID(rel[0])
-                if rel_tuple is None:
-                    return jsonify({"detail": "Invalid relationship"}), 500
-                print("rel2", rel_tuple)
-          
-                new_connection = {}
-                new_connection["type"] = "parent-child"
-                new_connection["rel_id"] = rel_tuple[1]
-                new_connection["source"] = rel_tuple[2]
-                new_connection["target"] = rel_tuple[3]
-
-                connections.append(new_connection)
-            print(connections)
-
-        nodes = []
-        for memberId in family_members:
-            new_node = {}
-            member = db.get_family_member(memberId[0])
-
-            new_node["id"] = memberId[0]
-            new_node["name"] = member[2]
-            new_node["dateOfBirth"] = member[3]
-            new_node["hobbies"] = db.getHobbyNamesfromMemberID(memberId[0])
-
-
-            nodes.append(new_node)
-
-        return_dict = {"nodes": nodes, "connections": connections}
-        print(return_dict)
-        return jsonify(return_dict)
+                return jsonify(response)
     
     except Exception as e:
         print("Uhhh ohhhh")
         print(e)
         print(str(e))
         return jsonify({"detail": str(e)}), 500
+
+
+
+
+# @app.route("/generatetree/", methods=["GET"])
+# def generate_tree():
+#     try:
+#         # treeID = db.getTreeIDfromUserName(session.user)
+#         # list of memberIDs
+#         print("session", session)
+#         family_members = db.getFamilyMemberIDsfromTreeID(session['treeid'])
+#         # list of relationshipIDs
+#         relationshipIds = db.getRelationshipIDsfromTreeID(session['treeid'])
+
+#         connections = []
+#         for rel in relationshipIds:
+#             print("rel", rel)
+#             rel_tuple = db.getMarriagefromRelationshipID(rel[0])
+#             if rel_tuple is not None:  # this means the relationship is a marriage
+#                 new_connection = {}
+#                 new_connection["type"] = "marriage"
+#                 new_connection["rel_id"] = rel_tuple[1]
+#                 new_connection["source"] = rel_tuple[2]
+#                 new_connection["target"] = rel_tuple[3]
+#                 connections.append(new_connection)
+#             else:
+#                 rel_tuple = db.getParentChildfromRelationshipID(rel[0])
+#                 if rel_tuple is None:
+#                     return jsonify({"detail": "Invalid relationship"}), 500
+#                 print("rel2", rel_tuple)
+          
+#                 new_connection = {}
+#                 new_connection["type"] = "parent-child"
+#                 new_connection["rel_id"] = rel_tuple[1]
+#                 new_connection["source"] = rel_tuple[2]
+#                 new_connection["target"] = rel_tuple[3]
+
+#                 connections.append(new_connection)
+#             print(connections)
+
+#         nodes = []
+#         for memberId in family_members:
+#             new_node = {}
+#             member = db.get_family_member(memberId[0])
+
+#             new_node["id"] = memberId[0]
+#             new_node["name"] = member[2]
+#             new_node["dateOfBirth"] = member[3]
+#             new_node["hobbies"] = db.getHobbyNamesfromMemberID(memberId[0])
+
+
+#             nodes.append(new_node)
+
+#         return_dict = {"nodes": nodes, "connections": connections}
+#         print(return_dict)
+#         return jsonify(return_dict)
+    
+#     except Exception as e:
+#         print("Uhhh ohhhh")
+#         print(e)
+#         print(str(e))
+#         return jsonify({"detail": str(e)}), 500
     
 
 @app.route("/deleteuser/<username>", methods=["DELETE"])

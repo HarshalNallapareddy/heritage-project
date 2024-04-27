@@ -1,6 +1,90 @@
 import connect_db as db
 import mysql.connector
 
+
+
+
+# ------------------- Optimized queries for getting data to generate family graph ----------------------
+
+def get_tree_data(tree_id):
+    try:
+        # Assume session['treeid'] is available
+        conn = db.create_connection()
+        cursor = conn.cursor()
+
+        # Fetching all relationships with their type in one go using JOIN
+        query = """
+        SELECT r.RelationshipID, 
+               CASE 
+                   WHEN m.RelationshipID IS NOT NULL THEN 'marriage'
+                   WHEN p.RelationshipID IS NOT NULL THEN 'parent-child'
+               END as Type,
+               COALESCE(m.Spouse1MemberID, p.ParentMemberID) as Source,
+               COALESCE(m.Spouse2MemberID, p.ChildMemberID) as Target
+        FROM Relationships r
+        LEFT JOIN Marriages m ON r.RelationshipID = m.RelationshipID
+        LEFT JOIN ParentChild p ON r.RelationshipID = p.RelationshipID
+        WHERE r.TreeID = %s
+        """
+        cursor.execute(query, (tree_id,))
+        relationships = cursor.fetchall()
+
+        # Preparing connections from fetched data
+        connections = [{
+            "type": rel[1],
+            "rel_id": rel[0],
+            "source": rel[2],
+            "target": rel[3]
+        } for rel in relationships]
+
+        # Fetching all family member details in one query
+        cursor.execute("SELECT * FROM FamilyMembers WHERE TreeID = %s", (tree_id,))
+        members = cursor.fetchall()
+
+
+        # print("\n\n\nbr 1")
+
+        # Fetching all hobbies in one query and creating a map
+        cursor.execute("SELECT * FROM Hobbies WHERE MemberID IN (%s)" % ','.join([str(m[0]) for m in members]))
+        hobbies = cursor.fetchall()
+        hobby_map = {}
+
+
+        # print("\n\n\nbr 2")
+        for hobby in hobbies:
+            if hobby[0] in hobby_map:
+                hobby_map[hobby[1]].append(hobby[2])
+            else:
+                hobby_map[hobby[1]] = [hobby[2]]
+
+
+
+        print(members)
+        # Preparing nodes from fetched data
+        nodes = [{
+            "id": member[0],
+            "name": member[2],
+            "dateOfBirth": member[3],
+            "dateOfDeath": member[4],
+            "pictureURL": member[5],
+            "streetAddress": member[6],
+            "city": member[7],
+            "state": member[9],
+            "country": member[9],
+            "zipCode": member[10],
+            "email": member[11],
+            "phone": member[12],
+            "hobbies": hobby_map.get(member[0], [])
+        } for member in members]
+
+        return {"nodes": nodes, "connections": connections}
+
+    except Exception as e:
+        print("Uhhh ohhhh")
+        print(e)
+        return {"detail": str(e)}
+
+
 # ------------------- ADD ---------------------------------------
 
 def add_user(username, email, phone, password_hash):
