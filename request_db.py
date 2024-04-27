@@ -551,6 +551,17 @@ def getFamilyMemberIDsfromTreeID(treeid):
         print(e)
         return None
     
+def getFamilyMemberByFullName(fullname, treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM FamilyMembers WHERE FullName = %s AND TreeID = %s",
+                       (fullname, treeid))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
 def getHobbyNamesfromMemberID(memberid):
     conn = db.create_connection()
     cursor = conn.cursor()

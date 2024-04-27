@@ -258,5 +258,22 @@ def add_access_log(userid, actiontype, actiondetails):
     time = datetime.now()
     db.add_accesslogs(userid, actiontype, time, actiondetails)
 
+@app.route("/getfamilymember/<fullname>", methods=["GET"])
+def get_family_member(fullname):
+    member = db.getFamilyMemberByFullName(fullname, session["treeID"])
+    if member is None:
+        return jsonify({"detail": "Family member not found"}), 404
+    return jsonify(member)
+
+@app.route("/updatefamilymember/<fullname>", methods=["PUT"])
+def update_family_member(fullname):
+    data = request.json
+    member = db.getFamilyMemberByFullName(fullname, session["treeID"])
+    if member is None:
+        return jsonify({"detail": "Family member not found"}), 404
+    db.update_family_member(member[0], data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
+    add_access_log(session["userID"], "update-family-member", "Family member " + str(data["fullname"]) + " updated")
+    return jsonify({"message": "Family member updated successfully"})
+
 if __name__ == "__main__":
     app.run(debug=True)
