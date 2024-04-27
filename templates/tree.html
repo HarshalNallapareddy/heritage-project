@@ -1,47 +1,296 @@
 {% extends "base.html" %}
-
 {% block content %}
-    <h1>Your Family Tree</h1>
-    <div id="familyTree">
-        <!-- Family tree data will be displayed here -->
-    </div>
 
-    <script>
-        // Function to make API call and display family tree
-        function getFamilyTree() {
-            fetch('/generatetree/frederick')
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data);
-                    // Assuming you have a function to render the family tree
-                    renderFamilyTree(data);
-                })
-                .catch(error => console.error('Error:', error));
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Graph</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+
+
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 3px;
         }
 
-        // Function to render family tree
+        .node text {
+            font: 12px sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: black; /* Make the lines black */
+            stroke-width: 2px;
+        }
+
+
+        #container {
+            display: flex;
+            height: 80vh;
+            border-bottom: 1px solid lightgray;
+        }
+        #network {
+            flex-grow: 1;
+            border-right: 1px solid lightgray;
+        }
+        #details {
+            width: 30%;
+            padding: 10px;
+            overflow-y: auto;
+        }
+        #functions {
+            display: flex;
+            justify-content: space-evenly;
+            background-color: #f7f7f7;
+            border-top: 1px solid lightgray;
+        }
+        .tab {
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-right: 1px solid lightgray;
+            flex-grow: 1;
+        }
+        .tab:last-child {
+            border-right: none;
+        }
+        .active-tab {
+            background-color: #e0e0e0;
+        }
+        #function-content {
+            padding: 10px;
+            height: 30vh; /* Increased height */
+        }
+
+        .node-label {
+            pointer-events: none;
+            text-anchor: middle;
+            font-size: 12px;
+        }
+
+        .link-label {
+            pointer-events: none;
+            text-anchor: middle;
+            font-size: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="network"></div>
+        <div id="details">Hover over a node to see details here.</div>
+    </div>
+    <div id="functions">
+        <div class="tab active-tab" onclick="changeTabContent('Update User')">Update User</div>
+        <div class="tab" onclick="changeTabContent('Add User')">Add User</div>
+        <div class="tab" onclick="changeTabContent('Delete Relationship')">Delete Relationship</div>
+        <div class="tab" onclick="changeTabContent('Add Relationship')">Add Relationship</div>
+        <div class="tab" onclick="changeTabContent('Find Path')">Find Path</div>
+    </div>
+    <div id="function-content">Function-Specific Content</div>
+
+
+<script>
+
+
+
+        // Function to make API call and display family tree
+        function getFamilyTree() {
+            // Mock data for demonstration purposes
+            const data = {
+                nodes: [
+                    {id: 1, name: 'Jimmy Bob', dateOfBirth: 'Mon, 27 Feb 1967 00:00:00 GMT', hobbies: ['tennis', 'golf']},
+                    {id: 2, name: 'Alice Bob', dateOfBirth: 'Tue, 27 Feb 1968 00:00:00 GMT', hobbies: ['reading', 'painting']},
+                    {id: 3, name: 'Bob Bob', dateOfBirth: 'Wed, 27 Feb 1969 00:00:00 GMT', hobbies: ['swimming', 'hiking']},
+                    {id: 4, name: 'Charlie Bob', dateOfBirth: 'Thu, 27 Feb 1970 00:00:00 GMT', hobbies: ['cooking', 'gardening']}
+                    // ... more nodes
+                ],
+                connections: [
+                    {source: 1, target: 2, type: 'marriage'},
+                    {source: 1, target: 3, type: 'parent-child'},
+                    {source: 2, target: 3, type: 'parent-child'},
+                    {source: 1, target: 4, type: 'parent-child'}
+
+                ]
+            };
+
+            renderFamilyTree(data);
+        }
+
+
+
+        // Function to render family tree using D3.js
         function renderFamilyTree(data) {
-            // Access data and render your family tree here
-            // Example:
-            let familyTreeHTML = '<ul>';
-            data.nodes.forEach(node => {
-                familyTreeHTML += `<li>${node.name}`;
-                if (node.hobbies.length > 0) {
-                    familyTreeHTML += '<ul>';
-                    node.hobbies.forEach(hobby => {
-                        familyTreeHTML += `<li>${hobby}</li>`;
-                    });
-                    familyTreeHTML += '</ul>';
+            const width = document.getElementById('network').clientWidth;
+            const height = document.getElementById('network').clientHeight;
+            const svg = d3.select("#network").append("svg")
+                          .attr("width", width)
+                          .attr("height", height);
+
+            const nodes = data.nodes;
+            const links = data.connections;
+
+
+
+            const simulation = d3.forceSimulation(nodes)
+                     .force("link", d3.forceLink(links).id(d => d.id).distance(100)) // Increase link distance
+                     .force("charge", d3.forceManyBody().strength(-1000)) // Increase repulsive force
+                     .force("center", d3.forceCenter(width / 2, height / 2));
+
+
+
+
+const link = svg.selectAll(".link")
+            .data(links)
+            .enter().append("line")
+            .attr("class", "link")
+            .style("stroke", d => {
+                if (d.type === 'marriage') {
+                    return "red";
+                } else if (d.type === 'parent-child') {
+                    return "green";
+                } else {
+                    return "gray";
                 }
-                familyTreeHTML += `</li>`;
+            })
+            .style("stroke-width", 4)
+            .on('mouseover', linkMouseover) // Updated to use the function
+            .on('mouseout', linkMouseout);
+
+    const linkLabels = svg.selectAll(".link-label")
+            .data(links)
+            .enter().append("text")
+            .attr("class", "link-label")
+            .text(d => d.type)
+            .on('mouseover', linkMouseover) // Attach the same mouseover event
+            .on('mouseout', linkMouseout);
+
+    // Function to handle mouseover event on links and labels
+    function linkMouseover(event, d) {
+        const sourceNode = nodes.find(node => node.id === d.source.id);
+        const targetNode = nodes.find(node => node.id === d.target.id);
+        let detailsText = '';
+        if (d.type === 'marriage') {
+            detailsText = `${sourceNode.name} is married to ${targetNode.name}`;
+        } else if (d.type === 'parent-child') {
+            detailsText = `${sourceNode.name} is the parent of ${targetNode.name}`;
+        }
+        document.getElementById('details').innerHTML = detailsText;
+    }
+
+    function linkMouseout(event, d) {
+        document.getElementById('details').innerHTML = 'Hover over a relationship to see details here.';
+    }
+
+
+            // Draw circles for the nodes
+            const node = svg.selectAll(".node")
+                            .data(nodes)
+                            .enter().append("circle")
+                            .attr("class", "node")
+                            .attr("fill", "white")
+                            .attr("border", "black")
+                            .attr("stroke", "black") // Add a stroke color if needed
+                            .attr("r", 35)
+                            .on('mouseover', (event, d) => {
+                                const details = document.getElementById('details');
+                                details.innerHTML = `Name: ${d.name}<br>Date of Birth: ${d.dateOfBirth}<br>Hobbies: ${d.hobbies.join(', ')}`;
+                            })
+                            .on('mouseout', (event, d) => {
+                                const details = document.getElementById('details');
+                                details.innerHTML = 'Hover over a node to see details here.';
+                            })
+                            .call(drag(simulation));
+
+
+            node.on('click', (event, d) => {selectNode(d.id);});
+
+
+
+
+            // Add node labels (family member names)
+            const nodeLabels = svg.selectAll(".node-label")
+                                  .data(nodes)
+                                  .enter().append("text")
+                                  .attr("class", "node-label")
+                                  .attr("dx", "0.25em")
+                                  .attr("dy", ".25em")
+                                  .text(d => d.name);
+
+
+
+
+
+            simulation.on("tick", () => {
+                link.attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node.attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+
+
+                nodeLabels
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
+
+                linkLabels
+                    .attr("x", d => (d.source.x + d.target.x) / 2)
+                    .attr("y", d => (d.source.y + d.target.y) / 2);
             });
-            familyTreeHTML += '</ul>';
-            document.getElementById('familyTree').innerHTML = familyTreeHTML;
+
+            function drag(simulation) {
+                function dragstarted(event) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    event.subject.fx = event.subject.x;
+                    event.subject.fy = event.subject.y;
+                }
+
+                function dragged(event) {
+                    event.subject.fx = event.x;
+                    event.subject.fy = event.y;
+                }
+
+                function dragended(event) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    event.subject.fx = null;
+                    event.subject.fy = null;
+                }
+
+                return d3.drag()
+                         .on("start", dragstarted)
+                         .on("drag", dragged)
+                         .on("end", dragended);
+            }
+        }
+
+        // Function to change tab content
+        function changeTabContent(tabName) {
+            // Update the function-specific content
+            const functionContent = document.getElementById('function-content');
+            functionContent.textContent = `${tabName} Content`;
+
+            // Update the active tab styling
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                if (tab.textContent === tabName) {
+                    tab.classList.add('active-tab');
+                } else {
+                    tab.classList.remove('active-tab');
+                }
+            });
         }
 
         // Call getFamilyTree function when the page loads
-        window.onload = function() {
-            getFamilyTree();
-        };
+        getFamilyTree();
     </script>
+</body>
+</html>
+
+
 {% endblock %}

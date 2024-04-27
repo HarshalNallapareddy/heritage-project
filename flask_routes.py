@@ -103,10 +103,6 @@ def create_user():
     #TODO: add userid and treeID to session
 
     print(f"Created user successfully: {username, email, phone}")
-
-
-
-
     # add user to session
     session['username'] = username
 
@@ -120,6 +116,7 @@ def get_user(username):
     if user is None:
         return jsonify({"detail": "User not found"}), 404
     return jsonify(user)
+
 
 
 @app.route("/users/login/", methods=["POST"])
@@ -148,7 +145,6 @@ def login():
         return jsonify({"detail": "Invalid username or password"}), 401
 
 
-
 @app.route("/generatetree/<username>", methods=["GET"])
 def generate_tree(username):
     try:
@@ -158,11 +154,6 @@ def generate_tree(username):
         # list of relationshipIDs
         relationshipIds = db.getRelationshipIDsfromTreeID(treeID)
 
-        print(treeID)
-        print(family_members)
-        print(relationshipIds)
-
-        print("br 1")
 
         connections = []
         for rel in relationshipIds:
@@ -170,6 +161,7 @@ def generate_tree(username):
             if rel_tuple is not None:  # this means the relationship is a marriage
                 new_connection = {}
                 new_connection["type"] = "marriage"
+                new_connection["rel_id"] = rel[1]
                 new_connection["source"] = rel_tuple[2]
                 new_connection["target"] = rel_tuple[3]
                 connections.append(new_connection)
@@ -179,10 +171,10 @@ def generate_tree(username):
                     return jsonify({"detail": "Invalid relationship"}), 500
                 new_connection = {}
                 new_connection["type"] = "parent-child"
+                new_connection["rel_id"] = rel[1]
                 new_connection["source"] = rel_tuple[2]
                 new_connection["target"] = rel_tuple[3]
                 connections.append(new_connection)
-
 
         nodes = []
         for memberId in family_members:
