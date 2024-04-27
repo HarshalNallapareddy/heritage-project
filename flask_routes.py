@@ -68,6 +68,10 @@ def add_family_relationship_page():
     # fetch json from generate_tree method
     return render_template('add_relationship.html')
 
+@app.route('/update_family_member')
+def update_family_member_page():
+    return render_template('update_family_member.html')
+
 @app.route('/accesslogs')
 def accesslogs():
     return render_template('accesslogs.html')
