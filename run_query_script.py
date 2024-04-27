@@ -14,12 +14,13 @@ def run_query(connection, query):
 
         # Fetch all the rows
         result = cursor.fetchall()
-
         return result
-
+    
     except mysql.connector.Error as err:
         print(f"Error: {err}")
         return None
+    
+
 
 def main():
     # Connect to the database

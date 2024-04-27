@@ -4,7 +4,7 @@
     <main class="container">
         <h1>Add Family Member</h1>
 
-        <form id="addFamilyMemberForm">
+        <form id="addFamilyMemberForm" method="post"">
             <div class="mb-3">
                 <label for="fullname" class="form-label">Full Name</label>
                 <input type="text" class="form-control" id="fullname" name="fullname" required>
@@ -49,8 +49,48 @@
                 <label for="phone" class="form-label">Phone</label>
                 <input type="text" class="form-control" id="phone" name="phone">
             </div>
-            <button type="submit" class="btn btn-primary">Add Family Member</button>
+
+            <button type="submit" class="btn btn-primary" form="addFamilyMemberForm" formaction="/addfamilymember/">Add Family Member</button>
         </form>
+
+        <script>
+            function submitForm(event) {
+                event.preventDefault(); // Prevent the default form submission
+                const form = document.getElementById('addFamilyMemberForm');
+                const formData = new FormData(form);
+                const jsonData = {};
+
+                formData.forEach((value, key) => {
+                    jsonData[key] = value;
+                });
+
+                console.log('Submitting:', jsonData);
+
+                fetch('/addfamilymember/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(jsonData)
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json(); // Processing the response
+                    } else {
+                        throw new Error('Network response was not ok.');
+                    }
+                })
+                .then(data => {
+                    console.log('Success:', data);
+                    window.location.href = '{{ url_for("tree") }}'; // Redirect to tree page
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+
+            document.getElementById('addFamilyMemberForm').addEventListener('submit', submitForm);
+        </script>
     </main>
 </div>
 {% endblock %}

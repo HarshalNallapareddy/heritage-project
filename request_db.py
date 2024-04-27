@@ -15,14 +15,16 @@ def add_user(username, email, phone, password_hash):
         print(e)
         return None
 
-def add_tree(treeid, treename, ownerUserID):
+def add_tree(treename, ownerUserID):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO FamilyTrees (TreeID, TreeName, OwnerUserID) VALUES (%s, %s, %s)",
-                       (treeid, treename, ownerUserID))
+        cursor.execute("INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES (%s, %s)",
+                       (treename, ownerUserID))
         conn.commit()
         return cursor.lastrowid
+    
+
     except mysql.connector.Error as e:
         print(e)
         return None
@@ -46,9 +48,12 @@ def add_family_member(treeid, fullname, dateofbirth, dateofdeath, pictureurl, st
     print("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                        (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
     try:
+        # cursor.execute("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+        #                (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
         cursor.execute("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                        (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
         conn.commit()
+        print("Family member added")
         return cursor.lastrowid
     except mysql.connector.Error as e:
         print(e)
@@ -70,8 +75,9 @@ def add_marriagerelationship(treeid, member1id, member2id):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO MarriageRelationship (TreeID, Member1ID, Member2ID) VALUES (%s, %s, %s)",
-                       (treeid, member1id, member2id))
+        relationship_id = add_relationship(treeid) # first add relationship to super table
+        cursor.execute("INSERT INTO Marriages (RelationshipID, Spouse1MemberID, Spouse2MemberID) VALUES (%s, %s, %s)",
+                       (relationship_id, member1id, member2id))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -82,8 +88,9 @@ def add_parentchildrelationship(treeid, parentid, childid):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO ParentChildRelationship (TreeID, ParentID, ChildID) VALUES (%s, %s, %s)",
-                       (treeid, parentid, childid))
+        relationship_id = add_relationship(treeid) # first add relationship to super table
+        cursor.execute("INSERT INTO ParentChild (RelationshipID, ParentMemberID, ChildMemberID) VALUES (%s, %s, %s)",
+                       (relationship_id, parentid, childid))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -298,12 +305,24 @@ def delete_family_member(memberid):
         print(e)
         return None
     
+
+
 def delete_relationship(relationshipId):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
+
+                # delete all marriages and parent-child relationships associated with this relationship
+        cursor.execute("DELETE FROM Marriages WHERE RelationshipID = %s",
+                       (relationshipId,))
+        cursor.execute("DELETE FROM ParentChild WHERE RelationshipID = %s",
+                          (relationshipId,))
+        
         cursor.execute("DELETE FROM Relationships WHERE RelationshipID = %s",
                        (relationshipId,))
+        
+
+        print(f"HELLOOOOOO {relationshipId}\n\n\n\n\n\n")
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -511,12 +530,13 @@ def getTreeIDfromUserName(username):
                        (username,))
         userid = cursor.fetchone()[0] #tuple object
         cursor.fetchall()
-        cursor.execute("SELECT TreeID FROM TreeAccess WHERE UserID = %s",
+        cursor.execute("SELECT TreeID FROM FamilyTrees WHERE OwnerUserID = %s",
                        (userid,))
         return cursor.fetchone()[0]
     except mysql.connector.Error as e:
         print(e)
         return None
+    
     
 def getFamilyMemberIDsfromTreeID(treeid):
     conn = db.create_connection()
@@ -529,6 +549,7 @@ def getFamilyMemberIDsfromTreeID(treeid):
         print(e)
         return None
     
+
 def getHobbyNamesfromMemberID(memberid):
     conn = db.create_connection()
     cursor = conn.cursor()

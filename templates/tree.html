@@ -106,42 +106,58 @@ let selectedLink = null;
 
 let currTab = 'Update User';
 
+let data = null;
+
 
 
 // Function to select a link when clicked
 function selectLink(event, d) {
     selectedLink = d;
-    console.log('Selected link:', d);
     // Display details about the selected link in some UI element, e.g., a sidebar or modal
     if(currTab === 'Delete Relationship'){
         console.log('Deleting relationship:', d);
         document.getElementById('pathResults').innerHTML = `Selected relationship: <b>${d.type}</b> between <b>${d.source.name}</b> and <b>${d.target.name}</b>`;
+        selectedLink = d;
     }
 }
 
 
+// some mock data for testing
+// let data =  {
+//                 nodes: [
+//                     {id: 1, name: 'Jimmy Bob', dateOfBirth: 'Mon, 27 Feb 1967 00:00:00 GMT', hobbies: ['tennis', 'golf']},
+//                     {id: 2, name: 'Alice Bob', dateOfBirth: 'Tue, 27 Feb 1968 00:00:00 GMT', hobbies: ['reading', 'painting']},
+//                     {id: 3, name: 'Bob Bob', dateOfBirth: 'Wed, 27 Feb 1969 00:00:00 GMT', hobbies: ['swimming', 'hiking']},
+//                     {id: 4, name: 'Charlie Bob', dateOfBirth: 'Thu, 27 Feb 1970 00:00:00 GMT', hobbies: ['cooking', 'gardening']}
+//                 ],
 
-let data =  {
-                nodes: [
-                    {id: 1, name: 'Jimmy Bob', dateOfBirth: 'Mon, 27 Feb 1967 00:00:00 GMT', hobbies: ['tennis', 'golf']},
-                    {id: 2, name: 'Alice Bob', dateOfBirth: 'Tue, 27 Feb 1968 00:00:00 GMT', hobbies: ['reading', 'painting']},
-                    {id: 3, name: 'Bob Bob', dateOfBirth: 'Wed, 27 Feb 1969 00:00:00 GMT', hobbies: ['swimming', 'hiking']},
-                    {id: 4, name: 'Charlie Bob', dateOfBirth: 'Thu, 27 Feb 1970 00:00:00 GMT', hobbies: ['cooking', 'gardening']}
-                ],
+//                 connections: [
+//                     {rel_id: 0, source: 1, target: 2, type: 'marriage'},
+//                     {rel_id: 1, source: 1, target: 3, type: 'parent-child'},
+//                     {rel_id: 2, source: 2, target: 3, type: 'parent-child'},
+//                     {rel_id: 3, source: 1, target: 4, type: 'parent-child'}
 
-                connections: [
-                    {rel_id: 0, source: 1, target: 2, type: 'marriage'},
-                    {rel_id: 1, source: 1, target: 3, type: 'parent-child'},
-                    {rel_id: 2, source: 2, target: 3, type: 'parent-child'},
-                    {rel_id: 3, source: 1, target: 4, type: 'parent-child'}
-
-                ]
-            };
+//                 ]
+//             };
 
         // Function to make API call and display family tree
-        function getFamilyTree() {
-            // Mock data for demonstration purposes
-            renderFamilyTree(data);
+        async function getFamilyTree() {
+        
+            // fetch data
+            // make an API call to get the family tree data
+            try {
+        // Make an API call to get the family tree data and wait for it to complete
+        const response = await fetch('/generatetree/');
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        data = await response.json();  // Parse JSON data from the response
+
+        console.log(data);  // Now `data` is available and logged correctly
+        renderFamilyTree(data);  // Now `data` is passed correctly
+    } catch (error) {
+        console.error('Failed to fetch the family tree data:', error);
+    }
         }
 
         // Function to render family tree using D3.js
@@ -159,7 +175,7 @@ let data =  {
 
             const simulation = d3.forceSimulation(nodes)
                      .force("link", d3.forceLink(links).id(d => d.id).distance(100)) // Increase link distance
-                     .force("charge", d3.forceManyBody().strength(-1000)) // Increase repulsive force
+                    //  .force("charge", d3.forceManyBody().strength(-100)) // Increase repulsive force
                      .force("center", d3.forceCenter(width / 2, height / 2));
 
 
@@ -209,7 +225,6 @@ const link = svg.selectAll(".link")
     function linkMouseout(event, d) {
         document.getElementById('details').innerHTML = 'Hover over a relationship to see details here.';
     }
-
 
             // Draw circles for the nodes
             const node = svg.selectAll(".node")
@@ -323,9 +338,10 @@ const link = svg.selectAll(".link")
             }
 
             else if (tabName === 'Add User'){
-                functionContent.innerHTML = `
-                <button onclick="submitAddUser()">Go to Add User Form</button>`;
-            }
+    functionContent.innerHTML = `
+    <a href="{{'add_family_member'}}" class="button">Go to Add User Form</a>`;
+}
+
 
             else if (tabName === 'Update User'){
                 functionContent.innerHTML = `
@@ -424,21 +440,40 @@ const link = svg.selectAll(".link")
 
 
 
-
-
         //////////////// Method to interact with server API ////////////////
 
-        function deleteRelationship(relId){
-            // make an API call to delete the relationship
-            if (selectedLink) {
-            console.log('Deleting relationship:', selectedLink);
-            // Here you would ideally make an API call to delete the relationship from the database
-            selectedLink = null; // Reset selected link after deletion
-            location.reload(); // Reload the page to update the visualization
-            } else {
-                document.getElementById('pathResults').innerHTML = 'No relationship selected.';
-            }
+        function deleteRelationship() {
+    if (!selectedLink) {
+        document.getElementById('pathResults').innerHTML = 'No relationship selected.';
+        return;
+    }
+
+    console.log('Deleting relationship:', selectedLink);
+
+    fetch('/deleterelationship', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({rel_id: selectedLink.rel_id})
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('pathResults').innerHTML = data.message;
+        if (response.ok) {
+            console.log('Relationship deleted successfully');
+        } else {
+            console.error('Error:', data.message);
         }
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        document.getElementById('pathResults').innerHTML = 'Error deleting relationship.';
+    });
+
+    selectedLink = null; // Reset selected link after deletion
+    location.reload(); // Reload the page to update the visualization
+}
 
 
 
@@ -454,48 +489,130 @@ const link = svg.selectAll(".link")
         }
 
 
-        function submitMarriageRelationshipToAdd(){
-            // read the selected nodes
-            // make an API call to add the relationship
 
-
-            if (selectedNodes.length !== 2) {
-                document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
-                return;
-            }
-
-            let node1 = selectedNodes[0];
-            let node2 = selectedNodes[1];
-
-            console.log('Adding marriage relationship between:', node1, node2);
-            selectedNodes = [];
-
-            // reset the selected nodes
-
-            // update text
-            location.reload(); // relaod the page
+    function submitMarriageRelationshipToAdd() {
+        if (selectedNodes.length !== 2) {
+            document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+            return;
         }
 
+        let node1 = selectedNodes[0];
+        let node2 = selectedNodes[1];
 
+        console.log('Adding marriage relationship between:', node1, node2);
 
-        function submitParentChildRelationshipToAdd(){
-
-            if (selectedNodes.length !== 2) {
-                document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
-                return;
+        fetch('/createmarriage', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({spouse1_id: node1, spouse2_id: node2})
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('pathResults').innerHTML = data.message;
+            if (response.ok) {
+                console.log('Marriage Creation successful');
+            } else {
+                console.error('Error:', data.message);
             }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
 
-            // read the selected nodes
-            // make an API call to add the relationship
-            let node1 = selectedNodes[0];
-            let node2 = selectedNodes[1];
+        selectedNodes = []; // Reset the selected nodes
+//         setTimeout(function() {
+//   // Code to execute after the pause
+//   console.log("1 second has passed.");
+// }, 1000);  // The time delay is in milliseconds, so 1000 ms is 1 second.
 
-            console.log('Adding parent-child relationship between:', node1, node2);
-            selectedNodes = [];
+        location.reload(); // Reload the page
+    }
 
-            location.reload();
+
+
+    function submitParentChildRelationshipToAdd() {
+        if (selectedNodes.length !== 2) {
+            document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+            return;
         }
 
+        let node1 = selectedNodes[0];
+        let node2 = selectedNodes[1];
+
+        console.log('Adding parent-child relationship between:', node1, node2);
+
+        fetch('/createparentchild', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({parent_id: node1, child_id: node2})
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('pathResults').innerHTML = data.message;
+            if (response.ok) {
+                console.log('Parent-Child Creation successful');
+            } else {
+                console.error('Error:', data.message);
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+
+        selectedNodes = []; // Reset the selected nodes
+//         setTimeout(function() {
+//   // Code to execute after the pause
+//   console.log("1 second has passed.");
+// }, 1000);  // The time delay is in milliseconds, so 1000 ms is 1 second.
+
+        location.reload(); // Reload the page
+
+    }
+
+
+
+        // function submitMarriageRelationshipToAdd(){
+        //     // read the selected nodes
+        //     // make an API call to add the relationship
+        //     if (selectedNodes.length !== 2) {
+        //         document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+        //         return;
+        //     }
+
+        //     let node1 = selectedNodes[0];
+        //     let node2 = selectedNodes[1];
+
+        //     console.log('Adding marriage relationship between:', node1, node2);
+        //     selectedNodes = [];
+
+        //     // reset the selected nodes
+
+        //     // update text
+        //     location.reload(); // relaod the page
+        // }
+
+
+        // function submitParentChildRelationshipToAdd(){
+        //     if (selectedNodes.length !== 2) {
+        //         document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+        //         return;
+        //     }
+        //     // read the selected nodes
+        //     // make an API call to add the relationship
+        //     let node1 = selectedNodes[0];
+        //     let node2 = selectedNodes[1];
+
+        //     console.log('Adding parent-child relationship between:', node1, node2);
+        //     selectedNodes = [];
+
+        //     location.reload();
+        // }
+
+    
 
         function submitUpdateUser(){
             // redirect to form with user queries
