@@ -209,7 +209,8 @@ def find_path():
 
         while len(queue) > 0:
 
-            current, path = queue.pop()
+            current, path = queue[0]
+            queue = queue[1:]
             visited.add(current)
 
             if current == target:
