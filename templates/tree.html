@@ -506,15 +506,69 @@ const link = svg.selectAll(".link")
 
 
     function submitPathFind() {
-            if (selectedNodes.length === 2) {
-                // Implement API call or logic to find the path
-                const pathText = `Path found between members: ${selectedNodes.join(' and ')}`;
-                document.getElementById('pathResults').innerHTML = pathText;
-                selectedNodes = []; // Reset for next search
-            } else {
-                document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
-            }
+    if (selectedNodes.length === 2) {
+        // Define the API URL
+        const apiUrl = '/find_path';
+
+        // Create the request body
+        const requestBody = {
+            source: selectedNodes[0],
+            target: selectedNodes[1]
+        };
+
+        console.log('Finding path between:', selectedNodes[0], selectedNodes[1]);
+        // fidn name of the selected nodes
+        let familyMemberNames = [];
+        for (let i = 0; i < selectedNodes.length; i++){
+            let node = data.nodes.find(node => node.id === selectedNodes[i]);
+            familyMemberNames.push(node.name);
         }
+
+        console.log('Finding path between:', familyMemberNames[0], familyMemberNames[1]);
+
+        // Fetch API to find path between the two selected nodes
+        fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Assuming the server returns the path or a relevant message in the response
+
+            // server returns  a list of nodes in the path
+            // print each node on a new line
+            // Print each node in the path on a new line in the 'pathResults' element
+            let pathText = 'Path found between members:<br>';
+            data.path.forEach(node => {
+                pathText += `${node}<br>`; // Add each node on a new line
+            });
+            document.getElementById('pathResults').innerHTML = pathText;
+
+
+            // const pathText = `Path found between members: ${data.path}`;
+            // document.getElementById('pathResults').innerHTML = pathText;
+        })
+        .catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+            document.getElementById('pathResults').innerHTML = 'Failed to find path.';
+        });
+
+        selectedNodes = []; // Reset for next search
+    } else {
+        document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
+    }
+}
+
+
+
 
 
 
@@ -599,51 +653,6 @@ const link = svg.selectAll(".link")
 }
 
 
-
-    // function submitParentChildRelationshipToAdd() {
-    //     if (selectedNodes.length !== 2) {
-    //         document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
-    //         return;
-    //     }
-
-    //     let node1 = selectedNodes[0];
-    //     let node2 = selectedNodes[1];
-
-    //     console.log('Adding parent-child relationship between:', node1, node2);
-
-    //     fetch('/createparentchild', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         },
-    //         body: JSON.stringify({parent_id: node1, child_id: node2})
-    //     })
-    //     .then(response => response.json())
-    //     .then(data => {
-    //         document.getElementById('pathResults').innerHTML = data.message;
-    //         if (response.ok) {
-    //             console.log('Parent-Child Creation successful');
-    //             // window.location.href = '/tree';
-    //             // window.location.assign('/tree');
-    //             window.location.replace('/tree');
-
-    //         } else {
-    //             console.error('Error:', data.message);
-    //         }
-
-    //         getFamilyTree();
-    //     })
-    //     .catch((error) => {
-    //         console.error('Error:', error);
-    //     });
-
-    //     selectedNodes = []; // Reset the selected nodes
-
-    //     location.reload(true); // Reload the page to update the visualization
-    //     location.reload(true);
-    // }
-
-    
 
         function submitUpdateUser(){
             // redirect to form with user queries

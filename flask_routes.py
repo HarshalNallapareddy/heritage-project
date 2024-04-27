@@ -139,6 +139,94 @@ def create_parent_child():
 
 
 
+@app.route("/find_path", methods=["POST"])
+def find_path():
+    try:
+        print("\n\n\n\n")
+
+
+
+        # get grah data
+        graph_data = db.get_tree_data(session['treeid'])
+        if len(graph_data) == 0:
+            return jsonify({"detail": "No data found"}), 404
+        
+        # get source and target
+        source = request.json.get("source")
+        target = request.json.get("target")
+
+        print("SOURCE: ", source)
+        print("TARGET: ", target)
+
+        nodes = graph_data["nodes"]
+        connections = graph_data["connections"]
+
+        id_to_name = {}
+        for node in nodes:
+            print(node["id"], node["name"])
+            id_to_name[node["id"]] = node["name"]
+
+        print("source name: ", id_to_name[source])
+        print("target name: ", id_to_name[target])
+        
+        graph = {}
+        for connection in connections:
+            source_x = connection["source"]
+            target_x = connection["target"]
+            rel_type = connection["type"]
+
+
+            x_name = id_to_name[source_x]
+            y_name = id_to_name[target_x]
+
+            print("1", source_x, x_name)
+            print("2", target_x, y_name)
+
+            
+            if source_x not in graph:
+                graph[source_x] = []
+
+            print("x-y", x_name, y_name)
+            graph[source_x].append((target_x, f"{x_name}" +" is married to " + f"{y_name}\n" if rel_type == "marriage" else f"{x_name}" + " is the parent of " + f"{y_name}\n"))
+            
+            if target_x not in graph:
+                graph[target_x] = []
+
+            graph[target_x].append((source_x, f"{y_name}" + " is married to " + f"{x_name}\n" if rel_type == "marriage" else f"{y_name}" + " is the child of " + f"{x_name}\n"))
+            # print("HELLO")
+
+
+        visited = set()
+
+        start = (source, [])
+        queue = [start]
+
+
+        print("GRAPH", graph)
+
+
+        # print("START", start)
+
+        while len(queue) > 0:
+
+            current, path = queue.pop()
+            visited.add(current)
+
+            if current == target:
+                return jsonify({"path": path})
+            
+            for neighbor, relation in graph[current]:
+                if neighbor not in visited:
+                    queue.append((neighbor, path + [relation]))
+
+        print("\n\n\n\n")
+        return jsonify({"path": ["No path found"]})
+
+
+    except Exception as e:
+        print(e)
+        return jsonify({"message": str(e)}), 401
+
 @app.route("/users/createuser/", methods=["POST"])
 def create_user():
     username = request.json.get("username")
