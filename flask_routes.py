@@ -69,7 +69,7 @@ def add_family_relationship_page():
     return render_template('add_relationship.html')
 
 @app.route('/accesslogs')
-def access_logs_page():
+def accesslogs():
     return render_template('accesslogs.html')
 
 
@@ -214,6 +214,9 @@ def add_family_member():
     add_access_log(session["userID"], "add-family-member", "Family member " + str(member_sanitized.fullname) + " added")
     return jsonify({"message": "Family member added successfully"})
 
+# session = {
+#     "userID": 3
+# }
 
 @app.route("/getaccesslogs", methods=["GET"])
 def get_access_logs():
