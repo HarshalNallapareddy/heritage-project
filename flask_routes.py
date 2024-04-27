@@ -5,7 +5,8 @@ from pydantic import BaseModel, ValidationError
 import mimetypes
 import request_db as db
 from flask_bcrypt import generate_password_hash, check_password_hash
-import datetime
+
+from datetime import datetime
 
 class User(BaseModel):
     userid: str
@@ -16,9 +17,8 @@ class User(BaseModel):
 
 
 class FamilyMember:
-    def __init__(self, treeid, memberid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone):
+    def __init__(self, treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone):
         self.treeid = treeid
-        self.memberid = memberid
         self.fullname = fullname
         self.dateofbirth = dateofbirth
         self.dateofdeath = dateofdeath
@@ -97,6 +97,29 @@ def create_user():
     add_access_log(userid, "create-user", "User created")
     return jsonify({"message": "Sign up successful"})
 
+@app.route("/users/createmarriage/", methods=["POST"])
+def create_marriage():
+    print("sfdgfh")
+
+    try:
+        spouse1 = request.json.get("spouse1")
+        spouse2 = request.json.get("spouse2")
+
+        #userID = 15
+        treeID = 10
+
+        familymemberids = db.getFamilyMemberIDsfromTreeID(treeID)
+        spouseID1 = -1
+        spouseID2 = -1
+        print(familymemberids)
+        for memberID in familymemberids:
+            familymember = db.get_family_member(memberID)
+            print(familymember)
+
+        return jsonify({"message": "Sign up successful"})
+    except Exception as e:
+        print(f'e')
+        return jsonify({"message", "Signup not successful"}, 401)
 
 
 @app.route("/users/getuser/<username>", methods=["GET"])
@@ -197,11 +220,13 @@ def delete_user(username):
 @app.route("/addfamilymember/", methods=["POST"])
 def add_family_member():
     data = request.json
-    member = FamilyMember(data["treeid"], data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
-    
+
+    # treeid = session["treeID"] <-- uncomment this line when session is implemented
+    member = FamilyMember(int(data["treeid"]), data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
+
     default_values = {
-        "dateofdeath": "NULL",
-        "pictureurl": "NULL",
+        "dateofdeath": None,
+        "pictureurl": None,
         "streetaddress": "NULL",
         "city": "NULL",
         "state": "NULL",
@@ -209,9 +234,11 @@ def add_family_member():
         "zipcode": "NULL",
         "email": "NULL",
     }
+
     member_sanitized = {key: default_values[key] if value is None else value for key, value in vars(member).items()}
     db.add_family_member(treeid=member_sanitized.treeid, fullname=member_sanitized.fullname, dateofbirth=member_sanitized.dateofbirth, dateofdeath=member_sanitized.dateofdeath, pictureurl=member_sanitized.pictureurl, streetaddress=member_sanitized.streetaddress, city=member_sanitized.city, state=member_sanitized.state, country=member_sanitized.country, zipcode=member_sanitized.zipcode, email=member_sanitized.email, phone=member_sanitized.phone)
     add_access_log(session["userID"], "add-family-member", "Family member " + str(member_sanitized.fullname) + " added")
+
     return jsonify({"message": "Family member added successfully"})
 
 # session = {
