@@ -68,6 +68,10 @@ def add_family_relationship_page():
     # fetch json from generate_tree method
     return render_template('add_relationship.html')
 
+@app.route('/accesslogs')
+def access_logs_page():
+    return render_template('accesslogs.html')
+
 
 @app.route("/users/createuser/", methods=["POST"])
 def create_user():
@@ -119,7 +123,7 @@ def login():
 
     if check_password_hash(stored_hashed_password, password):
         print("Login successful")
-        add_access_log(user[0], "login", "User logged in")
+        add_access_log(user[0], "Login", "User logged in")
         return jsonify({"message": "Login successful"})
     else:
         print("Invalid username or password")
@@ -210,9 +214,11 @@ def add_family_member():
     add_access_log(session["userID"], "add-family-member", "Family member " + str(member_sanitized.fullname) + " added")
     return jsonify({"message": "Family member added successfully"})
 
-@app.route("/getaccesslogs, methods=[GET]")
+
+@app.route("/getaccesslogs", methods=["GET"])
 def get_access_logs():
-    logs = db.get_all_accesslogs()
+    userid = session["userID"]
+    logs = db.get_accesslogs_by_userid(userid)
     print(logs)
     return jsonify(logs)
 

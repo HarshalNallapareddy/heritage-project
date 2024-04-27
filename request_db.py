@@ -503,6 +503,17 @@ def get_all_accesslogs():
         print(e)
         return None
     
+def get_accesslogs_by_userid(userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM AccessLogs WHERE UserID = %s",
+                       (userid,))
+        return cursor.fetchall()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
 def get_all_users():
     conn = db.create_connection()
     cursor = conn.cursor()
