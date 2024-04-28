@@ -83,8 +83,10 @@ def logout():
 
 @app.route('/tree')
 def tree():
-    # json_data = generate_tree("john")
-    return render_template('tree.html')
+    print("hello")
+    json_data = generate_tree()
+    print(json_data.json)
+    return render_template('tree.html', tree_data=json_data.json)
 
 
 
@@ -604,14 +606,9 @@ def generate_tree():
 @app.route("/addfamilymember/", methods=["POST"])
 def add_family_member():
     data = request.json
-    # treeid = session["treeid"] <-- uncomment this line when session is implemented
-<<<<<<< HEAD
-    member = FamilyMember(int(data["treeid"]), data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
-=======
 
     # print("DATA: ", data)
     member = FamilyMember(session['treeid'], data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
->>>>>>> 4cf835fca4c974648c3ef71b9636ff3fdc758fc3
     default_values = {
         "dateofdeath": None,
         "pictureurl": None,
@@ -624,11 +621,6 @@ def add_family_member():
         "email": "NULL",
     }
     member_sanitized = {key: default_values[key] if value=='' else value for key, value in vars(member).items()}
-<<<<<<< HEAD
-    print(member_sanitized)
-    db.add_family_member(treeid=member_sanitized['treeid'], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
-    return jsonify({"message": "Family member added successfully"})
-=======
     print("DATA: ", member_sanitized)
     memberid = db.add_family_member(session["treeid"], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
     add_access_log("add-family-member", "Family member " + str(member_sanitized["fullname"]) + " added")
@@ -640,11 +632,7 @@ def add_family_member():
     for hobby in hobbies:
         db.add_hobby(memberid, hobby)
         print(f"HOBBY ADDED: {hobby}")
-    
->>>>>>> 4cf835fca4c974648c3ef71b9636ff3fdc758fc3
-
-
-
+ 
     return jsonify({"message": "Family member added successfully"})
 
 if __name__ == "__main__":

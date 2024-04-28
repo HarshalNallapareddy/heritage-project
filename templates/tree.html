@@ -91,6 +91,7 @@
         <div class="tab" onclick="changeTabContent('Delete Relationship')">Delete Relationship</div>
         <div class="tab" onclick="changeTabContent('Add Relationship')">Add Relationship</div>
         <div class="tab" onclick="changeTabContent('Find Path')">Find Path</div>
+        <div class="tab" onclick="downloadJSON()">Download Tree as JSON</div>
     </div>
     <div id="function-content">
         <p>Click on a user to update their information.</p>
@@ -109,7 +110,7 @@ let currTab = 'Update Family Member';
 
 let data = null;
 
-
+let jsonDataForDownload = {{ tree_data | tojson | safe}};  // Assuming the tree data is passed from the server
 
 // Function to select a link when clicked
 function selectLink(event, d) {
@@ -459,12 +460,6 @@ details.style.cssText = 'font-size: 0.8em; line-height: 2.5;';  // Apply general
 
         }
 
-
-
-
-
-
-
         //////////////// Method to interact with server API ////////////////
 
         function deleteRelationship() {
@@ -572,10 +567,6 @@ details.style.cssText = 'font-size: 0.8em; line-height: 2.5;';  // Apply general
         document.getElementById('pathResults').innerHTML = 'Please select two nodes.';
     }
 }
-
-
-
-
 
 
     function submitMarriageRelationshipToAdd() {
@@ -708,11 +699,25 @@ details.style.cssText = 'font-size: 0.8em; line-height: 2.5;';  // Apply general
         }
     }
 
+    
+    function downloadJSON() {
+
+        console.log(jsonDataForDownload);
+        const blob = new Blob([JSON.stringify(jsonDataForDownload)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'data.json';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+    }
 
     getFamilyTree();  // Call the function to get and render the family tree
 
 
-    </script>
+</script>
 </body>
 </html>
 

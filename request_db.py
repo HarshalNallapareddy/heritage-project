@@ -268,11 +268,7 @@ def add_family_member(treeid, fullname, dateofbirth, dateofdeath, pictureurl, st
         cursor.execute("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                        (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
         conn.commit()
-<<<<<<< HEAD
-        print("Family Member added successfully")
-=======
-        print("Family member added")
->>>>>>> 4cf835fca4c974648c3ef71b9636ff3fdc758fc3
+        
         return cursor.lastrowid
     except Exception as e:
         print(e)
