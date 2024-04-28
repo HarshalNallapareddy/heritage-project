@@ -1,14 +1,14 @@
-from flask import Flask, request, redirect, session, jsonify, render_template, url_for, flash
+from flask import Flask, request, redirect, session, jsonify, render_template, url_for, flash, send_file
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from pydantic import BaseModel, ValidationError
 import mimetypes
 import request_db as db
-# from flask.json import JSONEncoder
 from flask_bcrypt import generate_password_hash, check_password_hash
 from datetime import datetime
 from datetime import date, datetime
 import json
+from io import BytesIO
 
 class User(BaseModel):
     userid: str
@@ -50,6 +50,43 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+@app.route('/download_tree', methods=['GET'])
+def download_tree():
+    # Create a dictionary to be converted into a JSON object
+    # Define the path for the temporary json file
+    add_access_log("view-tree", "Viewing family tree")
+    try:
+        response = db.get_tree_data(session['treeid'])
+        if len(response) == 0:
+            return jsonify({"detail": "No data found"}), 404
+        
+        else:
+            if "detail" in response:
+                return jsonify(response), 500
+            else:
+                memory_file = BytesIO()
+                memory_file.write(json.dumps(response, cls=CustomJSONEncoder).encode('utf-8'))
+                # memory_file.write(jsonify(response))
+                memory_file.seek(0)  # Go to the beginning of the BytesIO object
+                return send_file(memory_file, as_attachment=True,download_name='family_tree.json' ,mimetype='application/json')
+    
+    except Exception as e:
+        print("Uhhh ohhhh")
+        print(e)
+        print(str(e))
+        return jsonify({"detail": str(e)}), 500
+
+
+    # filename = 'data.json'
+    # data = {"hello": ""}
+    # # Writing JSON data
+    # with open(filename, 'w') as f:
+    #     json.dump(data, f)
+
+    # # Return the file for download
+    # return send_file(filename, as_attachment=True, download_name='data.json')
 
 
 @app.route('/share_page')
