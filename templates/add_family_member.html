@@ -4,7 +4,7 @@
     <main class="container">
         <h1>Add Family Member</h1>
 
-        <form id="addFamilyMemberForm" method="post" onsubmit="submitForm(event)">
+        <form id="addFamilyMemberForm" method="post">
             <div class="mb-3">
                 <label for="fullname" class="form-label">Full Name</label>
                 <input type="text" class="form-control" id="fullname" name="fullname" required>
@@ -49,23 +49,27 @@
                 <label for="phone" class="form-label">Phone</label>
                 <input type="text" class="form-control" id="phone" name="phone">
             </div>
-            <input type="hidden" name="treeid" value="5"><!-- remove this hidden input when session has been implemented  -->
+            <div class="mb-3">
+                <label for="treeid" class="form-label">Hobbies (comma separated)</label>
+                <input type="text" class="form-control" id="hobbies" name="hobbies">
+            </div>
+
             <button type="submit" class="btn btn-primary" form="addFamilyMemberForm" formaction="/addfamilymember/">Add Family Member</button>
         </form>
 
         <script>
-            console.log('submit form');
             function submitForm(event) {
-                console.log('function has been called');
-                event.preventDefault();
+                event.preventDefault(); // Prevent the default form submission
                 const form = document.getElementById('addFamilyMemberForm');
                 const formData = new FormData(form);
                 const jsonData = {};
+
                 formData.forEach((value, key) => {
                     jsonData[key] = value;
                 });
-                //add treeid field in json object
-                console.log(jsonData);
+
+                console.log('Submitting:', jsonData);
+
                 fetch('/addfamilymember/', {
                     method: 'POST',
                     headers: {
@@ -75,18 +79,21 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        return response.json();
+                        return response.json(); // Processing the response
                     } else {
                         throw new Error('Network response was not ok.');
                     }
                 })
                 .then(data => {
-                    console.log(data);
+                    console.log('Success:', data);
+                    window.location.href = '{{ url_for("tree") }}'; // Redirect to tree page
                 })
                 .catch(error => {
                     console.error('Error:', error);
                 });
             }
+
+            document.getElementById('addFamilyMemberForm').addEventListener('submit', submitForm);
         </script>
     </main>
 </div>

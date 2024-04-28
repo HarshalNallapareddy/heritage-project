@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+{% block content %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Graph</title>
+    <h1></h1>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+
+
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 3px;
+        }
+
+        .node text {
+            font: 12px sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: black; /* Make the lines black */
+            stroke-width: 2px;
+        }
+
+
+        #container {
+            display: flex;
+            height: 80vh;
+            border-bottom: 1px solid lightgray;
+        }
+        #network {
+            flex-grow: 1;
+            border-right: 1px solid lightgray;
+        }
+        #details {
+            width: 20%;
+            padding: 3px;
+            overflow-y: auto;
+        }
+        #functions {
+            display: flex;
+            justify-content: space-evenly;
+            background-color: #f7f7f7;
+            border-top: 1px solid lightgray;
+        }
+        .tab {
+            padding: 10px;
+            text-align: center;
+            cursor: pointer;
+            border-right: 1px solid lightgray;
+            flex-grow: 1;
+        }
+        .tab:last-child {
+            border-right: none;
+        }
+        .active-tab {
+            background-color: #e0e0e0;
+        }
+        #function-content {
+            padding: 10px;
+            height: 30vh; /* Increased height */
+        }
+
+        .node-label {
+            pointer-events: none;
+            text-anchor: middle;
+            font-size: 12px;
+        }
+
+        .link-label {
+            pointer-events: none;
+            text-anchor: middle;
+            font-size: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="network"></div>
+        <div id="details">Hover over a node or relationship to see details here.</div>
+    </div>
+
+
+<script>
+let data = JSON.parse('{{ tree_data | tojson | safe }}');
+console.log(data);
+
+
+
+
+
+        // Function to render family tree using D3.js
+        function renderFamilyTree(data) {
+
+            const network = document.getElementById('network');
+            network.innerHTML = '';  // Clear existing SVG to prevent duplication
+
+
+            const width = document.getElementById('network').clientWidth;
+            const height = document.getElementById('network').clientHeight;
+            // const svg = d3.select("#network").append("svg")
+            //               .attr("width", width)
+            //               .attr("height", height);
+
+
+
+            const svg = d3.select("#network").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .attr("background-color", "grey")
+    .call(d3.zoom().on("zoom", (event) => {
+        svg.attr("transform", event.transform);
+    })).append("g");
+
+    
+            const nodes = data.nodes;
+            const links = data.connections;
+
+
+
+            const simulation = d3.forceSimulation(nodes)
+        .force("link", d3.forceLink(links).id(d => d.id).distance(200)) // Increased link distance
+        .force("charge", d3.forceManyBody().strength(-500)) // Increased repulsive force
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .force("collide", d3.forceCollide().radius(100)); // Added collision force to avoid overlap
+
+
+
+const link = svg.selectAll(".link")
+            .data(links)
+            .enter().append("line")
+            .attr("class", "link")
+            .style("stroke", d => {
+                if (d.type === 'marriage') {
+                    return "red";
+                } else if (d.type === 'parent-child') {
+                    return "green";
+                } else {
+                    return "gray";
+                }
+            })
+            .style("stroke-width", 4)
+            .on('mouseover', linkMouseover) // Updated to use the function
+            .on('mouseout', linkMouseout)
+
+
+
+    const linkLabels = svg.selectAll(".link-label")
+            .data(links)
+            .enter().append("text")
+            .attr("class", "link-label")
+            .text(d => d.type)
+            .on('mouseover', linkMouseover) // Attach the same mouseover event
+            .on('mouseout', linkMouseout)
+
+    // Function to handle mouseover event on links and labels
+    function linkMouseover(event, d) {
+        const sourceNode = nodes.find(node => node.id === d.source.id);
+        const targetNode = nodes.find(node => node.id === d.target.id);
+        let detailsText = '';
+        if (d.type === 'marriage') {
+            detailsText = `${sourceNode.name} is married to ${targetNode.name}`;
+        } else if (d.type === 'parent-child') {
+            detailsText = `${sourceNode.name} is the parent of ${targetNode.name}`;
+        }
+        document.getElementById('details').innerHTML = detailsText;
+    }
+
+    function linkMouseout(event, d) {
+        document.getElementById('details').innerHTML = 'Hover over a node or relationship to see details here.';
+    }
+
+            // Draw circles for the nodes
+            const node = svg.selectAll(".node")
+                            .data(nodes)
+                            .enter().append("circle")
+                            .attr("class", "node")
+                            .attr("fill", "white")
+                            .attr("border", "black")
+                            .attr("stroke", "black") // Add a stroke color if needed
+                            .attr("r", 35)
+                            .on('mouseover', (event, d) => {
+                                const details = document.getElementById('details');
+
+                                let detailsHTML = '';
+
+// Check and display the picture if the URL is available
+if (d.pictureURL) {
+    detailsHTML += `<img src="${d.pictureURL}" style="max-width: 100%; height: auto;"><br>`;
+}
+
+// Display the name at the top with a larger font size
+detailsHTML += `<div style="font-size: 1.7em; margin-bottom: 0.25em;"><b>${d.name}</b></div>`;
+
+for (const [key, value] of Object.entries(d)) {
+    if (!['x', 'y', 'vx', 'vy', 'fx', 'fy', 'name', 'pictureURL', 'index'].includes(key)) {  // Exclude specified keys and the name, as it's already displayed
+        detailsHTML += `<b>${key}</b>: ${Array.isArray(value) ? value.join(', ') : value}<br>`;
+    }
+}
+details.innerHTML = detailsHTML;
+details.style.cssText = 'font-size: 0.8em; line-height: 2.5;';  // Apply general styling
+
+                                // details.innerHTML = `Name: ${d.name}<br>Date of Birth: ${d.dateOfBirth}<br>Hobbies: ${d.hobbies.join(', ')}`;
+                            })
+                            .on('mouseout', (event, d) => {
+                                const details = document.getElementById('details');
+                                details.innerHTML = 'Hover over a node or relationship to see details here.';
+                            })
+                            .call(drag(simulation));
+
+
+
+
+            // Add node labels (family member names)
+            const nodeLabels = svg.selectAll(".node-label")
+                                  .data(nodes)
+                                  .enter().append("text")
+                                  .attr("class", "node-label")
+                                  .attr("dx", "0.25em")
+                                  .attr("dy", ".25em")
+                                  .text(d => d.name);
+
+
+            simulation.on("tick", () => {
+                link.attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                node.attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+
+
+                nodeLabels
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
+
+                linkLabels
+                    .attr("x", d => (d.source.x + d.target.x) / 2)
+                    .attr("y", d => (d.source.y + d.target.y) / 2);
+            });
+
+            function drag(simulation) {
+                function dragstarted(event) {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    event.subject.fx = event.subject.x;
+                    event.subject.fy = event.subject.y;
+                }
+
+                function dragged(event) {
+                    event.subject.fx = event.x;
+                    event.subject.fy = event.y;
+                }
+
+                function dragended(event) {
+                    if (!event.active) simulation.alphaTarget(0);
+                    event.subject.fx = null;
+                    event.subject.fy = null;
+                }
+
+                return d3.drag()
+                         .on("start", dragstarted)
+                         .on("drag", dragged)
+                         .on("end", dragended);
+            }
+        }
+
+
+    renderFamilyTree(data);  // Call the function to get and render the family tree
+
+
+    </script>
+</body>
+</html>
+
+
+{% endblock %}
