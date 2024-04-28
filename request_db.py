@@ -1,6 +1,6 @@
 import connect_db as db
+import mysql
 import mysql.connector
-
 
 
 
@@ -85,6 +85,31 @@ def get_tree_data(tree_id):
         return {"detail": str(e)}
 
 
+
+def get_search_history_by_user_id(userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        # Prepare the SELECT statement to fetch search history for a specific user ID
+        query = "SELECT SearchQuery, SearchDate FROM SearchHistory WHERE UserID = %s"
+        cursor.execute(query, (userid,))
+
+        # Fetch all rows that match the query
+        results = cursor.fetchall()
+        print("RESULTS: ", results)
+        
+        # Commit the transaction if needed
+        conn.commit()
+        
+        # Return the results
+        return results  # Extracting SearchTerm from each tuple in the results list
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    finally:
+        cursor.close()
+        conn.close()
+
 # ------------------- ADD ---------------------------------------
 
 def add_user(username, email, phone, password_hash):
@@ -113,6 +138,21 @@ def add_tree(treename, ownerUserID):
         print(e)
         return None
     
+
+
+def get_accesslogs_by_userid(userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM AccessLogs WHERE UserID = %s",
+                       (userid,))
+        return cursor.fetchall()
+    except Exception as e:
+        print(e)
+        return None
+
+
+
 def add_tree_access(userid, treeid, accessrole):
     conn = db.create_connection()
     cursor = conn.cursor()
@@ -139,7 +179,7 @@ def add_family_member(treeid, fullname, dateofbirth, dateofdeath, pictureurl, st
         conn.commit()
         print("Family member added")
         return cursor.lastrowid
-    except mysql.connector.Error as e:
+    except Exception as e:
         print(e)
         return None
     
@@ -197,7 +237,7 @@ def add_searchhistory(userid, searchterm):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO SearchHistory (UserID, SearchTerm) VALUES (%s, %s)",
+        cursor.execute("INSERT INTO SearchHistory (UserID, SearchQuery, SearchDate) VALUES (%s, %s, NOW())",
                        (userid, searchterm))
         conn.commit()
         return cursor.lastrowid

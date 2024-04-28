@@ -5,6 +5,7 @@ from pydantic import BaseModel, ValidationError
 import mimetypes
 import request_db as db
 from flask_bcrypt import generate_password_hash, check_password_hash
+from datetime import datetime
 
 class User(BaseModel):
     userid: str
@@ -77,6 +78,28 @@ def add_family_relationship_page():
     return render_template('add_relationship.html')
 
 
+@app.route('/accesslogs')
+def accesslogs_page():
+    return render_template('accesslogs.html')
+
+
+@app.route("/getaccesslogs", methods=["GET"])
+def get_access_logs():
+    userid = session["userid"]
+    logs = db.get_accesslogs_by_userid(userid)
+    logs = logs[::-1]
+    print(logs)
+    return jsonify(logs)
+
+
+@app.route("/getsearchhistory", methods=["GET"])
+def get_search_history():
+    userid = session["userid"]
+    logs = db.get_search_history_by_user_id(userid)
+    logs = logs[::-1]
+    print(logs)
+    return jsonify(logs)
+
 
 
 @app.route("/deleterelationship", methods=["POST"])
@@ -85,6 +108,7 @@ def delete_relationship():
         rel_id = request.json.get("rel_id")
         print(f"\n\n\nDELETING {rel_id}")
         db.delete_relationship(rel_id)
+        add_access_log("delete-relationship", f"Deleted relationship with ID {rel_id}")
         return jsonify({"message": "Relationship deleted successfully"})
     except:
         return jsonify({"message": "Database error. Relationship deletion not successful."}), 401
@@ -105,6 +129,9 @@ def create_marriage():
         
         db.add_marriagerelationship(session['treeid'], spouse1, spouse2)
 
+        add_access_log("create-parent-child", f"Created relationship between {spouse1} and {spouse2}")
+
+
         return jsonify({"message": "Marriage Creation successful"})
 
     except:
@@ -112,17 +139,23 @@ def create_marriage():
 
 
 
+# Internal function
+def add_access_log(actiontype, actiondetails):
+    userid = session['userid']
+    time = datetime.now()
+    db.add_accesslogs(userid, actiontype, time, actiondetails)
+
 
 @app.route("/createparentchild", methods=["POST"])
 def create_parent_child():
     try:
         parent = request.json.get("parent_id")
         child = request.json.get("child_id")
+        
+        add_access_log("create-parent-child", f"Created relationship between {parent} and {child}")
 
         familymemberids = db.getFamilyMemberIDsfromTreeID(session['treeid'])
         familymemberids = [x[0] for x in familymemberids]
-
-
 
         print(parent, child, familymemberids)
         if parent not in familymemberids or child not in familymemberids:
@@ -144,8 +177,6 @@ def find_path():
     try:
         print("\n\n\n\n")
 
-
-
         # get grah data
         graph_data = db.get_tree_data(session['treeid'])
         if len(graph_data) == 0:
@@ -154,6 +185,8 @@ def find_path():
         # get source and target
         source = request.json.get("source")
         target = request.json.get("target")
+
+
 
         print("SOURCE: ", source)
         print("TARGET: ", target)
@@ -168,6 +201,9 @@ def find_path():
 
         print("source name: ", id_to_name[source])
         print("target name: ", id_to_name[target])
+
+        db.add_searchhistory(session['userid'], "Search between {} - {}".format(id_to_name[source], id_to_name[target]))
+
         
         graph = {}
         for connection in connections:
@@ -203,8 +239,6 @@ def find_path():
 
 
         print("GRAPH", graph)
-
-
         # print("START", start)
 
         while len(queue) > 0:
@@ -227,6 +261,7 @@ def find_path():
     except Exception as e:
         print(e)
         return jsonify({"message": str(e)}), 401
+
 
 @app.route("/users/createuser/", methods=["POST"])
 def create_user():
@@ -260,6 +295,8 @@ def create_user():
     print("CREATED USER!!!")
     print(session['username'], session['userid'], session['treeid'])
     print("-------------------------------")
+    add_access_log("create-user", "New user created!")
+
 
 
 
@@ -297,6 +334,8 @@ def login():
         session["treeid"] = db.getTreeIDfromUserName(username)
         print("-------------------")
         print(session["username"], session["userid"], session["treeid"])
+        add_access_log("login", "login successful")
+
 
         # return redirect(url_for('tree'))
         return jsonify({"message": "Login successful"})
@@ -309,6 +348,7 @@ def login():
 
 @app.route("/generatetree/", methods=["GET"])
 def generate_tree():
+    add_access_log("view-tree", "Viewing family tree")
     try:
         response = db.get_tree_data(session['treeid'])
         if len(response) == 0:
@@ -389,23 +429,26 @@ def generate_tree():
 #         return jsonify({"detail": str(e)}), 500
     
 
-@app.route("/deleteuser/<username>", methods=["DELETE"])
-def delete_user(username):
-    userid = db.get_user_by_username(username)
-    if userid is None:
-        return jsonify({"detail": "User not found"}), 404
-    db.delete_user(userid)
+# @app.route("/deleteuser/<username>", methods=["DELETE"])
+# def delete_user(username):
+#     if userid is None:
+#         return jsonify({"detail": "User not found"}), 404
+#     add_access_log(session["userid"], "delete-user", "User deleted")
+#     db.delete_user(userid)
 
 
 @app.route("/addfamilymember/", methods=["POST"])
 def add_family_member():
     data = request.json
     # treeid = session["treeid"] <-- uncomment this line when session is implemented
+
+    # print("DATA: ", data)
     member = FamilyMember(session['treeid'], data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
     default_values = {
         "dateofdeath": None,
         "pictureurl": None,
         "streetaddress": "NULL",
+        "fullname": "NULL",
         "city": "NULL",
         "state": "NULL",
         "country": "NULL",
@@ -413,8 +456,10 @@ def add_family_member():
         "email": "NULL",
     }
     member_sanitized = {key: default_values[key] if value=='' else value for key, value in vars(member).items()}
-    print(member_sanitized)
-    db.add_family_member(treeid=member_sanitized['treeid'], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
+    print("DATA: ", member_sanitized)
+    db.add_family_member(session["treeid"], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
+    add_access_log("add-family-member", "Family member " + str(member_sanitized["fullname"]) + " added")
+
     return jsonify({"message": "Family member added successfully"})
 
 if __name__ == "__main__":

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Search Logs</h1>
+<div id="searchLogs"></div>
+
+
+
+<h1>Access Logs</h1>
+<div id="accessLogs"></div>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+        fetchSearchLogs();
+        setInterval(fetchSearchLogs, 60000); // Auto-refresh every minute
+    });
+
+    function fetchSearchLogs() {
+        fetch('/getsearchhistory', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(logs => {
+            const searchLogsDiv = document.getElementById('searchLogs');
+            searchLogsDiv.innerHTML = ''; // Clear previous logs
+            if (logs.length === 0) {
+                searchLogsDiv.innerHTML = '<p>No access logs available.</p>';
+            } else {
+                console.log("hello");
+                logs.forEach(log => {
+                    const date = new Date(log[3]).toLocaleString(); // Assuming the date is the fourth element in the tuple
+                    const logHTML = `<div><p><strong>Search Query:</strong> ${log[1]} <strong>Time:</strong> ${log[0]}</p></div>`;
+                    searchLogsDiv.innerHTML += logHTML;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching access logs:', error);
+        });
+    }
+
+
+
+
+
+
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+        fetchAccessLogs();
+        setInterval(fetchAccessLogs, 60000); // Auto-refresh every minute
+    });
+
+    function fetchAccessLogs() {
+        fetch('/getaccesslogs', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(logs => {
+            const accessLogsDiv = document.getElementById('accessLogs');
+            accessLogsDiv.innerHTML = ''; // Clear previous logs
+            if (logs.length === 0) {
+                accessLogsDiv.innerHTML = '<p>No access logs available.</p>';
+            } else {
+                logs.forEach(log => {
+                    const date = new Date(log[3]).toLocaleString(); // Assuming the date is the fourth element in the tuple
+                    const logHTML = `<div><p><strong>User ID:</strong> ${log[1]} | <strong>Action Type:</strong> ${log[2]} | <strong>Action Details:</strong> ${log[4]} | <strong>Time:</strong> ${date}</p></div>`;
+                    accessLogsDiv.innerHTML += logHTML;
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching access logs:', error);
+        });
+    }
+</script>
+
+{% endblock %}
