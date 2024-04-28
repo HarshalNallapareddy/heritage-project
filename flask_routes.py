@@ -255,6 +255,9 @@ def get_search_history():
 def delete_relationship():
     try:
         rel_id = request.json.get("rel_id")
+        # check if the rel_id is in the user's tree, if not then return an error
+        if(db.checkIfRelationshipInUserTree(rel_id, session["userID"]) == False):
+            return jsonify({"message": "Relationship not found in user's tree"}), 401
         print(f"\n\n\nDELETING {rel_id}")
         db.delete_relationship(rel_id)
         add_access_log("delete-relationship", f"Deleted relationship with ID {rel_id}")
@@ -606,9 +609,14 @@ def generate_tree():
 @app.route("/addfamilymember/", methods=["POST"])
 def add_family_member():
     data = request.json
+<<<<<<< HEAD
 
     # print("DATA: ", data)
     member = FamilyMember(session['treeid'], data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
+=======
+    # treeid = session["treeid"] <-- uncomment this line when session is implemented
+    member = FamilyMember(int(data["treeid"]), data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
+>>>>>>> 66f9c2fc6cb6e51fdb154d7fbcd179c01507ce37
     default_values = {
         "dateofdeath": None,
         "pictureurl": None,
@@ -621,6 +629,10 @@ def add_family_member():
         "email": "NULL",
     }
     member_sanitized = {key: default_values[key] if value=='' else value for key, value in vars(member).items()}
+<<<<<<< HEAD
+=======
+
+>>>>>>> 66f9c2fc6cb6e51fdb154d7fbcd179c01507ce37
     print("DATA: ", member_sanitized)
     memberid = db.add_family_member(session["treeid"], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
     add_access_log("add-family-member", "Family member " + str(member_sanitized["fullname"]) + " added")
@@ -632,7 +644,15 @@ def add_family_member():
     for hobby in hobbies:
         db.add_hobby(memberid, hobby)
         print(f"HOBBY ADDED: {hobby}")
+<<<<<<< HEAD
  
+=======
+    
+
+
+
+
+>>>>>>> 66f9c2fc6cb6e51fdb154d7fbcd179c01507ce37
     return jsonify({"message": "Family member added successfully"})
 
 if __name__ == "__main__":
