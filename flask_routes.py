@@ -4,8 +4,11 @@ from werkzeug.exceptions import HTTPException
 from pydantic import BaseModel, ValidationError
 import mimetypes
 import request_db as db
+# from flask.json import JSONEncoder
 from flask_bcrypt import generate_password_hash, check_password_hash
 from datetime import datetime
+from datetime import date, datetime
+import json
 
 class User(BaseModel):
     userid: str
@@ -13,6 +16,14 @@ class User(BaseModel):
     email: str
     phone: str
     password: str
+
+
+
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, (datetime, date)):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 class FamilyMember:
@@ -41,6 +52,24 @@ def index():
     return render_template('index.html')
 
 
+@app.route('/share_page')
+def share_page():
+    results = db.get_tree_access_by_treeid(session['treeid']) # the users who have access to your tree
+    shared_by_you = []
+    for user in results:
+        shared_by_you.append({"username": user[1], "id": user[0]})
+    
+
+    shared_by_others = []
+    results = db.get_shared_tree_access_by_userid(session['userid'])
+    for tree in results:
+        shared_by_others.append({"title": tree[1], "id": tree[0]})
+    print(shared_by_others)
+
+    
+    return render_template('share.html', shared_by_you=shared_by_you, shared_by_others=shared_by_others)
+
+
 @app.route('/login_page')
 def login_page():
     return render_template('login.html')
@@ -63,6 +92,100 @@ def tree():
 @app.route('/signup')
 def signup():
     return render_template('signup.html')
+
+
+# @app.route('/delete_member/<int:memberID>', methods=['GET'])
+# def delete_member(memberID):
+#     # Logic to delete family member with memberID
+#     if request.method == 'GET':
+#         # Perform action to delete family member
+#         try:
+#             # run delete for the member id
+#             x = db.delete_family_member(memberID)
+#             print(x)
+#             return redirect(url_for('tree'))
+        
+#         except Exception as e:
+#             return redirect(url_for('tree'))
+
+
+
+@app.route('/view_tree/<int:tree_id>', methods=['GET'])
+def view_tree(tree_id):
+    # check to see if given user has access to the tree using tree access
+    if db.check_if_user_has_access_to_tree(session['userid'], tree_id):
+        data = db.get_tree_data(tree_id)
+        import json
+        print(data)
+
+        return render_template('view_tree.html', tree_data=data)
+    
+
+    return share_page()
+
+    # if not, return to share page
+
+    # if yes, return the tree data
+
+
+    # Logic to view tree with tree_id
+    return jsonify({'tree_id': tree_id})
+
+
+
+
+@app.route('/revoke_access/<int:user_id>', methods=['GET'])
+def revoke_access(user_id):
+    # Logic to revoke access for user with user_id
+    if request.method == 'GET':
+        # Perform action to revoke access
+        try:
+            # run delete for the user's tree and specified user id
+            x = db.delete_tree_access(session['treeid'], user_id)
+            print(x)
+            return share_page()
+        
+        except Exception as e:
+            return share_page()
+    
+
+
+
+@app.route('/share_tree/', methods=['POST'])
+def share_tree():
+    if request.method == 'POST':
+        username = request.form['username']
+        results = db.get_user_by_username(username)
+        print(results)
+
+        if results is None:
+            flash('Username does not exist', 'error')
+            return share_page()
+        
+        userid = results[0]
+
+        if db.check_if_user_has_access_to_tree(userid, session['treeid']):
+            flash('User already has access to tree', 'error')
+            return share_page()
+
+        db.add_tree_access(userid, session['treeid'], "Viewer")
+
+
+        # check to see if username exists
+        # if db.get_user_by_username(username) is None:
+        #     flash('Username does not exist', 'error')
+        #     return redirect(url_for('share_page'))
+    
+        # add access to user
+        # db.add_tree_access(session['treeid'], db.get_user_by_username(username)[0])
+
+
+        # update TreeAccess table to make that username have access to the tree
+
+        # Logic to share tree with user 'username'
+        return share_page()
+    else:
+        return share_page()
 
 
 
@@ -92,6 +215,7 @@ def get_access_logs():
     logs = logs[::-1]
     print(logs)
     return jsonify(logs)
+
 
 
 @app.route("/getsearchhistory", methods=["GET"])
@@ -494,4 +618,6 @@ def add_family_member():
 
 if __name__ == "__main__":
     app.secret_key = "super secret"
+    app.json_encoder = CustomJSONEncoder
+
     app.run(debug=True)

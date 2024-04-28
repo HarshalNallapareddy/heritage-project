@@ -123,6 +123,8 @@ def add_user(username, email, phone, password_hash):
     except mysql.connector.Error as e:
         print(e)
         return None
+    
+
 
 def add_tree(treename, ownerUserID):
     conn = db.create_connection()
@@ -151,6 +153,51 @@ def get_accesslogs_by_userid(userid):
         print(e)
         return None
 
+
+
+# method to read which users have access to a specific tree
+# get the user id's, then the user details
+def get_tree_access_by_treeid(treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT UserID FROM TreeAccess WHERE TreeID = %s",
+                       (treeid,))
+        userids = cursor.fetchall()
+        users = []
+        for userid in userids:
+            cursor.execute("SELECT * FROM Users WHERE UserID = %s",
+                           (userid[0],))
+            users.append(cursor.fetchone())
+        return users
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+
+def delete_tree_access_by_treeid(treeid, userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM TreeAccess WHERE TreeID = %s AND UserID = %s",
+                       (treeid, userid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+
+def check_if_user_has_access_to_tree(userid, treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM TreeAccess WHERE UserID = %s AND TreeID = %s",
+                       (userid, treeid))
+        return cursor.fetchone() is not None
+    except mysql.connector.Error as e:
+        print(e)
+        return None
 
 
 def add_tree_access(userid, treeid, accessrole):
@@ -427,7 +474,26 @@ def delete_tree(treeid):
         print(e)
         return None
     
-def delete_tree_access(userid, treeid):
+
+def get_shared_tree_access_by_userid(userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT TreeID FROM TreeAccess WHERE UserID = %s",
+                       (userid,))
+        treeids = cursor.fetchall()
+        trees = []
+        for treeid in treeids:
+            cursor.execute("SELECT * FROM FamilyTrees WHERE TreeID = %s",
+                           (treeid[0],))
+            trees.append(cursor.fetchone())
+        return trees
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+
+
+def delete_tree_access(treeid, userid):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:

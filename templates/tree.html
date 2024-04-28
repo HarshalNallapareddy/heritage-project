@@ -252,7 +252,7 @@ if (d.pictureURL) {
 detailsHTML += `<div style="font-size: 1.7em; margin-bottom: 0.25em;"><b>${d.name}</b></div>`;
 
 for (const [key, value] of Object.entries(d)) {
-    if (!['x', 'y', 'vx', 'vy', 'name', 'pictureURL', 'index'].includes(key)) {  // Exclude specified keys and the name, as it's already displayed
+    if (!['x', 'y', 'vx', 'vy', 'fx', 'fy', 'name', 'pictureURL', 'index'].includes(key)) {  // Exclude specified keys and the name, as it's already displayed
         detailsHTML += `<b>${key}</b>: ${Array.isArray(value) ? value.join(', ') : value}<br>`;
     }
 }
