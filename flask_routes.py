@@ -621,6 +621,7 @@ def add_family_member():
         "email": "NULL",
     }
     member_sanitized = {key: default_values[key] if value=='' else value for key, value in vars(member).items()}
+
     print("DATA: ", member_sanitized)
     memberid = db.add_family_member(session["treeid"], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
     add_access_log("add-family-member", "Family member " + str(member_sanitized["fullname"]) + " added")
@@ -633,6 +634,7 @@ def add_family_member():
         db.add_hobby(memberid, hobby)
         print(f"HOBBY ADDED: {hobby}")
     
+
 
 
 
