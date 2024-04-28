@@ -85,9 +85,9 @@
         <div id="details">Hover over a node or relationship to see details here.</div>
     </div>
     <div id="functions">
-        <div class="tab" onclick="changeTabContent('Delete User')">Delete Family Member</div>
-        <div class="tab active-tab" onclick="changeTabContent('Update User')">Update Family Member</div>
-        <div class="tab" onclick="changeTabContent('Add User')">Add Family Member</div>
+        <div class="tab" onclick="changeTabContent('Delete Family Member')">Delete Family Member</div>
+        <div class="tab active-tab" onclick="changeTabContent('Update Family Member')">Update Family Member</div>
+        <div class="tab" onclick="changeTabContent('Add Family Member')">Add Family Member</div>
         <div class="tab" onclick="changeTabContent('Delete Relationship')">Delete Relationship</div>
         <div class="tab" onclick="changeTabContent('Add Relationship')">Add Relationship</div>
         <div class="tab" onclick="changeTabContent('Find Path')">Find Path</div>
@@ -105,7 +105,7 @@ let selectedNodes = [];
 
 let selectedLink = null;
 
-let currTab = 'Update User';
+let currTab = 'Update Family Member';
 
 let data = null;
 
@@ -338,8 +338,8 @@ details.style.cssText = 'font-size: 0.8em; line-height: 2.5;';  // Apply general
                     <p>Click on two family members to find the path between them.</p>
 
                     <button onclick="submitPathFind()">Find Path</button>
-                    <div id="pathResults"></div>
-                `;
+
+                    <div id="pathResults"></div>`;
             } 
 
             else if (tabName === 'Add Relationship') {
@@ -359,15 +359,23 @@ details.style.cssText = 'font-size: 0.8em; line-height: 2.5;';  // Apply general
                     <div id="pathResults"></div>`;
             }
 
-            else if (tabName === 'Add User'){
+            else if (tabName === 'Add Family Member'){
     functionContent.innerHTML = `
     <a href="{{'add_family_member'}}" class="button">Go to Add User Form</a>`;
 }
 
-            else if (tabName === 'Update User'){
+            else if (tabName === 'Update Family Member'){
                 functionContent.innerHTML = `
                     <p>Click on a family member to update their information.</p>
                     <button onclick="submitUpdateUser()">Update User</button>
+                    <div id="pathResults"></div>`;
+                }
+
+            
+            else if (tabName === 'Delete Family Member'){
+                functionContent.innerHTML = `
+                    <p>Click on a family member to delete them. To delete a user, they must not be in any relationships.</p>
+                    <button onclick="submitDeleteUser()">Delete User</button>
                     <div id="pathResults"></div>`;
                 }
 
@@ -426,11 +434,11 @@ details.style.cssText = 'font-size: 0.8em; line-height: 2.5;';  // Apply general
         }
 
 
-        else if (currTab == 'Update User'){
+        else if (currTab == 'Update Family Member' || currTab == 'Delete Family Member'){
             // make an API call to get the user details
             // populate the form with the user details
             // submit the form to update the user details
-            console.log('Updating user:', nodeId);
+            // console.log('Updating user:', nodeId);
 
             selectedNodes = [];
 
@@ -658,6 +666,45 @@ details.style.cssText = 'font-size: 0.8em; line-height: 2.5;';  // Apply general
             // Redirect to the API route with the selected node as a query parameter
             window.location.href = `/update_family_member/${encodeURIComponent(selectedNodes[0])}`;
             selectedNodes = [];
+        }
+    }
+
+
+
+    function submitDeleteUser(){
+        // redirect to form with user queries
+        if(selectedNodes.length === 1){
+            console.log('Deleting user:', selectedNodes[0]);
+
+        // console.log('Adding marriage relationship between:', node1, node2);
+
+        fetch(`/delete_member`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({id_to_delete: selectedNodes[0]})
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data: data })))
+    .then(result => {
+        document.getElementById('pathResults').innerHTML = result.data.message;
+        if (result.ok) {
+            console.log('marriage-Child Creation successful');
+            window.location.replace('/tree');
+        } else {
+            pathResults.innerHTML = 'Error:', result.data.message;
+            console.error('Error:', result.data.message);
+        }
+
+        getFamilyTree(); // Ensure this function is defined and handles post-action updates correctly
+    })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+
+        selectedNodes = []; // Reset the selected nodes
+
+
         }
     }
 

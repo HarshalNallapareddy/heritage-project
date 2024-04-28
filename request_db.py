@@ -86,6 +86,50 @@ def get_tree_data(tree_id):
 
 
 
+# check to see if a given memberID is in a given tree
+def check_member_in_tree(memberid, treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM FamilyMembers WHERE MemberID = %s AND TreeID = %s",
+                       (memberid, treeid))
+        return cursor.fetchone() is not None
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+
+# check to see if a member is in any relationships (both marraige or parent Child) in a given tree
+def check_member_in_relationships(memberid, treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM Relationships r JOIN Marriages m ON r.RelationshipID = m.RelationshipID WHERE (m.Spouse1MemberID = %s OR m.Spouse2MemberID = %s) AND r.TreeID = %s",
+                       (memberid, memberid, treeid))
+        if cursor.fetchone() is not None:
+            return True
+        cursor.execute("SELECT * FROM Relationships r JOIN ParentChild p ON r.RelationshipID = p.RelationshipID WHERE (p.ParentMemberID = %s OR p.ChildMemberID = %s) AND r.TreeID = %s",
+                       (memberid, memberid, treeid))
+        return cursor.fetchone() is not None
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+
+
+# delete a member from the tree, and all their hobbies
+def delete_member_from_tree(memberid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM FamilyMembers WHERE MemberID = %s",
+                       (memberid,))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+
+
 def get_search_history_by_user_id(userid):
     conn = db.create_connection()
     cursor = conn.cursor()

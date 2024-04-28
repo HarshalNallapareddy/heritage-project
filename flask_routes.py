@@ -94,19 +94,41 @@ def signup():
     return render_template('signup.html')
 
 
-# @app.route('/delete_member/<int:memberID>', methods=['GET'])
-# def delete_member(memberID):
-#     # Logic to delete family member with memberID
-#     if request.method == 'GET':
-#         # Perform action to delete family member
-#         try:
-#             # run delete for the member id
-#             x = db.delete_family_member(memberID)
-#             print(x)
-#             return redirect(url_for('tree'))
+@app.route('/delete_member', methods=['POST'])
+def delete_member():
+    # Logic to delete family member with memberID
+        print("hello")
+        id_to_delete = request.json.get('id_to_delete')
+
+        print(id_to_delete)
+        # first check to see if member is in the user's tree
+        in_tree = db.check_member_in_tree( id_to_delete, session['treeid'],)
+        print(in_tree)
+        if not in_tree:
+            print("not in tree")
+            return jsonify({"message": "Member not in user's tree"}), 401
+
+        print("BREAKING POINT")
+        # check that the member is not in any relationships
+        in_relationship = db.check_member_in_relationships(id_to_delete, session['treeid'])
+        print("IN RELATIONSHIP: ", in_relationship)
+        if in_relationship:
+            return jsonify({"message": "Member is in a relationship"}), 401
         
-#         except Exception as e:
-#             return redirect(url_for('tree'))
+
+        print("DELETING MEMBER")
+        # Perform action to delete family member
+        try:
+            # delete hobbies
+            db.delete_hobbies_by_memberid(id_to_delete)
+            print("HELLO")
+            # run delete for the member id
+            x = db.delete_family_member(id_to_delete)
+            print(x)
+            return jsonify({"message": "Deleted"})
+        
+        except Exception as e:
+            return jsonify({"message": "Something went wrong"}), 401
 
 
 
