@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Shared Family Trees</h2>
+
+
+    <!-- {{ shared_by_you }} -->
+    <div class="row">
+        <div class="col-md-6">
+            <h4>Shared By You</h4>
+            <ul>
+                {% for user in shared_by_you %}
+                    <!-- <li>{{ user.username }} <a href="{{ url_for('revoke_access', user_id=user.id) }}">Revoke Access</a></li> -->
+                    <li>{{ user.username }} <a href="{{ url_for('revoke_access', user_id=user.id) }}">Revoke Access</a></li>
+
+                {% endfor %}
+            </ul>
+
+
+            <form action="{{ url_for('share_tree') }}" method="post">  <!-- Changed action to 'share_tree' endpoint -->
+                <label for="username">Enter Username to Share Tree:</label>
+                <input type="text" id="username" name="username">
+                <button type="submit">Share</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h4>Shared by Others</h4>
+            <ul>
+                {% for tree in shared_by_others %}
+                    <li><a href="{{ url_for('view_tree', tree_id=tree.id) }}">{{ tree.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -17,8 +17,9 @@ class User(BaseModel):
 
 
 class FamilyMember:
-    def __init__(self, treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone):
+    def __init__(self, treeid, memberid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone):
         self.treeid = treeid
+        self.memberid = memberid
         self.fullname = fullname
         self.dateofbirth = dateofbirth
         self.dateofdeath = dateofdeath
@@ -231,8 +232,8 @@ def add_family_member():
     member = FamilyMember(treeid, data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
 
     default_values = {
-        "dateofdeath": None,
-        "pictureurl": None,
+        "dateofdeath": "NULL",
+        "pictureurl": "NULL",
         "streetaddress": "NULL",
         "city": "NULL",
         "state": "NULL",
