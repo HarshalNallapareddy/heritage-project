@@ -607,3 +607,23 @@ def getParentChildfromRelationshipID(relationshipid):
     except mysql.connector.Error as e:
         print(e)
         return None
+    
+def checkIfRelationshipInUserTree(rel_id, user_id):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM TreeAccess WHERE UserID = %s AND AccessRole = 'Editor'",
+                       (user_id,))
+        tree_id = cursor.fetchone()[1]
+        cursor.fetchall()
+        cursor.execute("SELECT * FROM Relationships WHERE RelationshipID = %s AND TreeID = %s",
+                       (rel_id, tree_id))
+        result = cursor.fetchone()
+
+        if result is not None:
+            return True
+        else:
+            return False
+    except mysql.connector.Error as e:
+        print(e)
+        return None
