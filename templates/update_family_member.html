@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <main class="container">
+        <h1>Update Family Member: {{ member_dict.FullName }}</h1>
+
+        {{ member_dict.hobbies }}
+
+        <p>{{ member_dict }}</p>
+        
+
+
+        <form id="updateFamilyMemberForm" action="{{ url_for('update_family_member_page', memberID=member_id) }}" method="post">
+            <div class="mb-3">
+                <label for="fullname" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="fullname" name="fullname" value="{{ member_dict.FullName }}">
+            </div>
+            <div class="mb-3">
+                <label for="dateofbirth" class="form-label">Date of Birth</label>
+                <input type="date" class="form-control" id="dateofbirth" name="dateofbirth" value="{{ member_dict.DateOfBirth }}" required>
+            </div>
+            <div class="mb-3">
+                <label for="dateofdeath" class="form-label">Date of Death</label>
+                <input type="date" class="form-control" id="dateofdeath" name="dateofdeath" value="{{ member_dict.DataOfDeath }}">
+            </div>
+            <div class="mb-3">
+                <label for="pictureurl" class="form-label">Picture URL</label>
+                <input type="text" class="form-control" id="pictureurl" name="pictureurl" value="{{ member_dict.PictureURL }}">
+            </div>
+            <div class="mb-3">
+                <label for="streetaddress" class="form-label">Street Address</label>
+                <input type="text" class="form-control" id="streetaddress" name="streetaddress" value="{{ member_dict.StreetAddress }}">
+            </div>
+            <div class="mb-3">
+                <label for="city" class="form-label">City</label>
+                <input type="text" class="form-control" id="city" name="city" value="{{ member_dict.City }}">
+            </div>
+            <div class="mb-3">
+                <label for="state" class="form-label">State</label>
+                <input type="text" class="form-control" id="state" name="state" value="{{ member_dict.State }}">
+            </div>
+            <div class="mb-3">
+                <label for="country" class="form-label">Country</label>
+                <input type="text" class="form-control" id="country" name="country" value="{{ member_dict.Contry }}">
+            </div>
+            <div class="mb-3">
+                <label for="zipcode" class="form-label">Zip Code</label>
+                <input type="text" class="form-control" id="zipcode" name="zipcode" value="{{ member_dict.ZIPCode }}">
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" value="{{ member_dict.Email }}">
+            </div>
+            <div class="mb-3">
+                <label for="phone" class="form-label">Phone</label>
+                <input type="text" class="form-control" id="phone" name="phone" value="{{ member_dict.Phone }}">
+            </div>
+            <div class="mb-3">
+                <label for="treeid" class="form-label">Hobbies (enter comma separated)</label>
+                <input type="text" class="form-control" id="hobbies" name="hobbies" value="{{ member_dict.hobbies }}">
+            </div>
+
+            <input type="hidden" id="treeid" name="treeid" value="{{ member_id }}"><!-- remove this hidden input when session has been implemented  -->
+            <!-- Assuming treeid is obtained elsewhere and not part of the dictionary -->
+            <button type="submit" class="btn btn-primary">Update Family Member</button>
+        </form>
+
+    </main>
+
+
+{% endblock %}

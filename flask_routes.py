@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, session, jsonify, render_template, url_for
+from flask import Flask, request, redirect, session, jsonify, render_template, url_for, flash
 from flask_cors import CORS
 from werkzeug.exceptions import HTTPException
 from pydantic import BaseModel, ValidationError
@@ -65,17 +65,19 @@ def signup():
     return render_template('signup.html')
 
 
+
 @app.route('/add_family_member')
 def add_family_member_page():
     # fetch json from generate_tree method
     return render_template('add_family_member.html')
 
 
-
 @app.route('/add_family_relationship')
 def add_family_relationship_page():
     # fetch json from generate_tree method
     return render_template('add_relationship.html')
+
+
 
 
 @app.route('/accesslogs')
@@ -138,12 +140,98 @@ def create_marriage():
         return jsonify({"message", "Database error. Relationship creation not successful."}), 401
 
 
-
 # Internal function
 def add_access_log(actiontype, actiondetails):
     userid = session['userid']
     time = datetime.now()
     db.add_accesslogs(userid, actiontype, time, actiondetails)
+
+
+
+
+@app.route('/update_family_member/<int:memberID>', methods=["GET", "POST"])
+def update_family_member_page(memberID):
+    # TODO: check to see if memberID is in the user's tree
+    # TODO: add hobbies
+    if request.method == 'POST':
+            try:
+                # Extract form data
+                full_name = request.form['fullname']
+                date_of_birth = request.form['dateofbirth']
+                date_of_death = request.form.get('dateofdeath')  # Using .get() to handle if the field is empty
+                picture_url = request.form['pictureurl']
+                street_address = request.form['streetaddress']
+                city = request.form['city']
+                state = request.form['state']
+                country = request.form['country']
+                zipcode = request.form['zipcode']
+                email = request.form['email']
+                phone = request.form['phone']
+
+
+                hobbies = request.form['hobbies'].split(',')
+
+                # Example: Update the database using SQLAlchemy or another database library
+                print(f"Updating family member with ID {memberID} with the following data: {full_name}, {date_of_birth}, {date_of_death}, {picture_url}, {street_address}, {city}, {state}, {country}, {zipcode}, {email}, {phone}")
+                
+                if date_of_death == '':
+                    date_of_death = None
+                
+                if picture_url == '':
+                    picture_url = None
+                
+                if street_address == '':
+                    street_address = None
+                
+                if city == '':
+                    city = None
+                
+                if state == '':
+                    state = None
+                
+                if country == '':
+                    country = None
+
+                if zipcode == '':
+                    zipcode = None
+                
+                if email == '':
+                    email = None
+                
+                last_row_id = db.update_family_member(memberID, full_name, date_of_birth, date_of_death, picture_url, street_address, city, state, country, zipcode, email, phone)
+                                                    # memberid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone
+                print(f"Last row ID: {last_row_id}")
+
+                db.delete_hobbies_by_memberid(memberID)
+                # print("DELETED HOBBIES")
+                for hobby in hobbies:
+                    # print(session["treeid"], memberID, hobby)
+                    db.add_hobby(memberID, hobby)
+                    print(f"HOBBY ADDED: {hobby}")
+                flash('Family member updated successfully!', 'success')
+
+                return redirect(url_for('tree'))
+                
+        
+            except Exception as e:
+                flash(f'An error occurred: {e}', 'error')
+                return redirect(url_for('update_family_member_page', memberID=memberID))
+
+        
+
+    else:
+        member_dict = db.get_family_member(memberID)
+        hobbies = db.getHobbyNamesfromMemberID(memberID)
+        # print(hobbies)
+
+        member_dict['hobbies'] = ",".join(hobbies)
+        print(member_dict['hobbies'])
+
+        # convert all Null values to None
+        member_dict = {key: '' if value == 'NULL' or value == None else value for key, value in member_dict.items()}
+        return render_template('update_family_member.html', member_id=memberID, member_dict=member_dict)
+
+
 
 
 @app.route("/createparentchild", methods=["POST"])
@@ -185,7 +273,6 @@ def find_path():
         # get source and target
         source = request.json.get("source")
         target = request.json.get("target")
-
 
 
         print("SOURCE: ", source)
@@ -369,74 +456,6 @@ def generate_tree():
 
 
 
-# @app.route("/generatetree/", methods=["GET"])
-# def generate_tree():
-#     try:
-#         # treeID = db.getTreeIDfromUserName(session.user)
-#         # list of memberIDs
-#         print("session", session)
-#         family_members = db.getFamilyMemberIDsfromTreeID(session['treeid'])
-#         # list of relationshipIDs
-#         relationshipIds = db.getRelationshipIDsfromTreeID(session['treeid'])
-
-#         connections = []
-#         for rel in relationshipIds:
-#             print("rel", rel)
-#             rel_tuple = db.getMarriagefromRelationshipID(rel[0])
-#             if rel_tuple is not None:  # this means the relationship is a marriage
-#                 new_connection = {}
-#                 new_connection["type"] = "marriage"
-#                 new_connection["rel_id"] = rel_tuple[1]
-#                 new_connection["source"] = rel_tuple[2]
-#                 new_connection["target"] = rel_tuple[3]
-#                 connections.append(new_connection)
-#             else:
-#                 rel_tuple = db.getParentChildfromRelationshipID(rel[0])
-#                 if rel_tuple is None:
-#                     return jsonify({"detail": "Invalid relationship"}), 500
-#                 print("rel2", rel_tuple)
-          
-#                 new_connection = {}
-#                 new_connection["type"] = "parent-child"
-#                 new_connection["rel_id"] = rel_tuple[1]
-#                 new_connection["source"] = rel_tuple[2]
-#                 new_connection["target"] = rel_tuple[3]
-
-#                 connections.append(new_connection)
-#             print(connections)
-
-#         nodes = []
-#         for memberId in family_members:
-#             new_node = {}
-#             member = db.get_family_member(memberId[0])
-
-#             new_node["id"] = memberId[0]
-#             new_node["name"] = member[2]
-#             new_node["dateOfBirth"] = member[3]
-#             new_node["hobbies"] = db.getHobbyNamesfromMemberID(memberId[0])
-
-
-#             nodes.append(new_node)
-
-#         return_dict = {"nodes": nodes, "connections": connections}
-#         print(return_dict)
-#         return jsonify(return_dict)
-    
-#     except Exception as e:
-#         print("Uhhh ohhhh")
-#         print(e)
-#         print(str(e))
-#         return jsonify({"detail": str(e)}), 500
-    
-
-# @app.route("/deleteuser/<username>", methods=["DELETE"])
-# def delete_user(username):
-#     if userid is None:
-#         return jsonify({"detail": "User not found"}), 404
-#     add_access_log(session["userid"], "delete-user", "User deleted")
-#     db.delete_user(userid)
-
-
 @app.route("/addfamilymember/", methods=["POST"])
 def add_family_member():
     data = request.json
@@ -457,8 +476,19 @@ def add_family_member():
     }
     member_sanitized = {key: default_values[key] if value=='' else value for key, value in vars(member).items()}
     print("DATA: ", member_sanitized)
-    db.add_family_member(session["treeid"], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
+    memberid = db.add_family_member(session["treeid"], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
     add_access_log("add-family-member", "Family member " + str(member_sanitized["fullname"]) + " added")
+
+    hobbies = data["hobbies"].split(',')
+    print(hobbies)
+
+    print("MEMBERID: ", memberid)
+    for hobby in hobbies:
+        db.add_hobby(memberid, hobby)
+        print(f"HOBBY ADDED: {hobby}")
+    
+
+
 
     return jsonify({"message": "Family member added successfully"})
 

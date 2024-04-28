@@ -37,8 +37,8 @@
             border-right: 1px solid lightgray;
         }
         #details {
-            width: 10%;
-            padding: 5px;
+            width: 20%;
+            padding: 3px;
             overflow-y: auto;
         }
         #functions {
@@ -82,18 +82,19 @@
 <body>
     <div id="container">
         <div id="network"></div>
-        <div id="details">Hover over a node to see details here.</div>
+        <div id="details">Hover over a node or relationship to see details here.</div>
     </div>
     <div id="functions">
-        <div class="tab active-tab" onclick="changeTabContent('Update User')">Update User</div>
-        <div class="tab" onclick="changeTabContent('Add User')">Add User</div>
+        <div class="tab" onclick="changeTabContent('Delete User')">Delete Family Member</div>
+        <div class="tab active-tab" onclick="changeTabContent('Update User')">Update Family Member</div>
+        <div class="tab" onclick="changeTabContent('Add User')">Add Family Member</div>
         <div class="tab" onclick="changeTabContent('Delete Relationship')">Delete Relationship</div>
         <div class="tab" onclick="changeTabContent('Add Relationship')">Add Relationship</div>
         <div class="tab" onclick="changeTabContent('Find Path')">Find Path</div>
     </div>
     <div id="function-content">
         <p>Click on a user to update their information.</p>
-        <button onclick="submitUpdateUser()">Update User</button>
+        <button onclick="submitUpdateUser()">Update Family Member</button>
         <div id="pathResults"></div>
     </div>
 
@@ -121,24 +122,6 @@ function selectLink(event, d) {
     }
 }
 
-
-// some mock data for testing
-// let data =  {
-//                 nodes: [
-//                     {id: 1, name: 'Jimmy Bob', dateOfBirth: 'Mon, 27 Feb 1967 00:00:00 GMT', hobbies: ['tennis', 'golf']},
-//                     {id: 2, name: 'Alice Bob', dateOfBirth: 'Tue, 27 Feb 1968 00:00:00 GMT', hobbies: ['reading', 'painting']},
-//                     {id: 3, name: 'Bob Bob', dateOfBirth: 'Wed, 27 Feb 1969 00:00:00 GMT', hobbies: ['swimming', 'hiking']},
-//                     {id: 4, name: 'Charlie Bob', dateOfBirth: 'Thu, 27 Feb 1970 00:00:00 GMT', hobbies: ['cooking', 'gardening']}
-//                 ],
-
-//                 connections: [
-//                     {rel_id: 0, source: 1, target: 2, type: 'marriage'},
-//                     {rel_id: 1, source: 1, target: 3, type: 'parent-child'},
-//                     {rel_id: 2, source: 2, target: 3, type: 'parent-child'},
-//                     {rel_id: 3, source: 1, target: 4, type: 'parent-child'}
-
-//                 ]
-//             };
 
         // Function to make API call and display family tree
         async function getFamilyTree() {
@@ -181,6 +164,7 @@ function selectLink(event, d) {
             const svg = d3.select("#network").append("svg")
     .attr("width", width)
     .attr("height", height)
+    .attr("background-color", "grey")
     .call(d3.zoom().on("zoom", (event) => {
         svg.attr("transform", event.transform);
     })).append("g");
@@ -242,7 +226,7 @@ const link = svg.selectAll(".link")
     }
 
     function linkMouseout(event, d) {
-        document.getElementById('details').innerHTML = 'Hover over a relationship to see details here.';
+        document.getElementById('details').innerHTML = 'Hover over a node or relationship to see details here.';
     }
 
             // Draw circles for the nodes
@@ -256,11 +240,30 @@ const link = svg.selectAll(".link")
                             .attr("r", 35)
                             .on('mouseover', (event, d) => {
                                 const details = document.getElementById('details');
-                                details.innerHTML = `Name: ${d.name}<br>Date of Birth: ${d.dateOfBirth}<br>Hobbies: ${d.hobbies.join(', ')}`;
+
+                                let detailsHTML = '';
+
+// Check and display the picture if the URL is available
+if (d.pictureURL) {
+    detailsHTML += `<img src="${d.pictureURL}" style="max-width: 100%; height: auto;"><br>`;
+}
+
+// Display the name at the top with a larger font size
+detailsHTML += `<div style="font-size: 1.7em; margin-bottom: 0.25em;"><b>${d.name}</b></div>`;
+
+for (const [key, value] of Object.entries(d)) {
+    if (!['x', 'y', 'vx', 'vy', 'name', 'pictureURL', 'index'].includes(key)) {  // Exclude specified keys and the name, as it's already displayed
+        detailsHTML += `<b>${key}</b>: ${Array.isArray(value) ? value.join(', ') : value}<br>`;
+    }
+}
+details.innerHTML = detailsHTML;
+details.style.cssText = 'font-size: 0.8em; line-height: 2.5;';  // Apply general styling
+
+                                // details.innerHTML = `Name: ${d.name}<br>Date of Birth: ${d.dateOfBirth}<br>Hobbies: ${d.hobbies.join(', ')}`;
                             })
                             .on('mouseout', (event, d) => {
                                 const details = document.getElementById('details');
-                                details.innerHTML = 'Hover over a node to see details here.';
+                                details.innerHTML = 'Hover over a node or relationship to see details here.';
                             })
                             .call(drag(simulation));
 
@@ -361,16 +364,13 @@ const link = svg.selectAll(".link")
     <a href="{{'add_family_member'}}" class="button">Go to Add User Form</a>`;
 }
 
-
             else if (tabName === 'Update User'){
                 functionContent.innerHTML = `
-                    <p>Click on a user to update their information.</p>
+                    <p>Click on a family member to update their information.</p>
                     <button onclick="submitUpdateUser()">Update User</button>
                     <div id="pathResults"></div>`;
                 }
 
-            
-            
             
             else {
                 functionContent.textContent = `${tabName} Content`;
@@ -392,8 +392,6 @@ const link = svg.selectAll(".link")
         function selectNode(nodeId) {
             console.log('Selected node:', nodeId);
             
-
-
             if (currTab == 'Add Relationship' || currTab == 'Find Path'){
                 // check if the selected nodes are already selected
                 // if so, remove the selection
@@ -653,23 +651,20 @@ const link = svg.selectAll(".link")
 }
 
 
-
-        function submitUpdateUser(){
-            // redirect to form with user queries
-            if(selectedNodes.length === 1){
-                console.log('Updating user:', selectedNodes[0]);
-                selectedNodes = [];
-
-                location.reload();
-            }
-
-            else {
-                document.getElementById('pathResults').innerHTML = 'Please select a node.';
-            }
+    function submitUpdateUser(){
+        // redirect to form with user queries
+        if(selectedNodes.length === 1){
+            console.log('Updating user:', selectedNodes[0]);
+            // Redirect to the API route with the selected node as a query parameter
+            window.location.href = `/update_family_member/${encodeURIComponent(selectedNodes[0])}`;
+            selectedNodes = [];
         }
+    }
 
-        // Call getFamilyTree function when the page loads
-        getFamilyTree();
+
+    getFamilyTree();  // Call the function to get and render the family tree
+
+
     </script>
 </body>
 </html>
