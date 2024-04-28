@@ -5,4 +5,5 @@ heritage-venv/
 .gitignore
 __pycache__/
 env
+*.pyc
 # i forgot which one it is

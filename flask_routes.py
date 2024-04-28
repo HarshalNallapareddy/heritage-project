@@ -253,6 +253,9 @@ def get_search_history():
 def delete_relationship():
     try:
         rel_id = request.json.get("rel_id")
+        # check if the rel_id is in the user's tree, if not then return an error
+        if(db.checkIfRelationshipInUserTree(rel_id, session["userID"]) == False):
+            return jsonify({"message": "Relationship not found in user's tree"}), 401
         print(f"\n\n\nDELETING {rel_id}")
         db.delete_relationship(rel_id)
         add_access_log("delete-relationship", f"Deleted relationship with ID {rel_id}")
@@ -618,9 +621,20 @@ def add_family_member():
         "email": "NULL",
     }
     member_sanitized = {key: default_values[key] if value=='' else value for key, value in vars(member).items()}
-    print(member_sanitized)
-    db.add_family_member(treeid=member_sanitized['treeid'], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
-    return jsonify({"message": "Family member added successfully"})
+
+    print("DATA: ", member_sanitized)
+    memberid = db.add_family_member(session["treeid"], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
+    add_access_log("add-family-member", "Family member " + str(member_sanitized["fullname"]) + " added")
+
+    hobbies = data["hobbies"].split(',')
+    print(hobbies)
+
+    print("MEMBERID: ", memberid)
+    for hobby in hobbies:
+        db.add_hobby(memberid, hobby)
+        print(f"HOBBY ADDED: {hobby}")
+    
+
 
 
 

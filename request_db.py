@@ -1,158 +1,5 @@
 import connect_db as db
-import mysql
 import mysql.connector
-
-
-
-# ------------------- Optimized queries for getting data to generate family graph ----------------------
-
-def get_tree_data(tree_id):
-    try:
-        # Assume session['treeid'] is available
-        conn = db.create_connection()
-        cursor = conn.cursor()
-
-        # Fetching all relationships with their type in one go using JOIN
-        query = """
-        SELECT r.RelationshipID, 
-               CASE 
-                   WHEN m.RelationshipID IS NOT NULL THEN 'marriage'
-                   WHEN p.RelationshipID IS NOT NULL THEN 'parent-child'
-               END as Type,
-               COALESCE(m.Spouse1MemberID, p.ParentMemberID) as Source,
-               COALESCE(m.Spouse2MemberID, p.ChildMemberID) as Target
-        FROM Relationships r
-        LEFT JOIN Marriages m ON r.RelationshipID = m.RelationshipID
-        LEFT JOIN ParentChild p ON r.RelationshipID = p.RelationshipID
-        WHERE r.TreeID = %s
-        """
-        cursor.execute(query, (tree_id,))
-        relationships = cursor.fetchall()
-
-        # Preparing connections from fetched data
-        connections = [{
-            "type": rel[1],
-            "rel_id": rel[0],
-            "source": rel[2],
-            "target": rel[3]
-        } for rel in relationships]
-
-        # Fetching all family member details in one query
-        cursor.execute("SELECT * FROM FamilyMembers WHERE TreeID = %s", (tree_id,))
-        members = cursor.fetchall()
-
-
-        # print("\n\n\nbr 1")
-
-        # Fetching all hobbies in one query and creating a map
-        cursor.execute("SELECT * FROM Hobbies WHERE MemberID IN (%s)" % ','.join([str(m[0]) for m in members]))
-        hobbies = cursor.fetchall()
-        print("hooga", hobbies)
-        hobby_map = {}
-
-
-        # print("\n\n\nbr 2")
-        for hobby in hobbies:
-            if hobby[1] in hobby_map:
-                hobby_map[hobby[1]].append(hobby[2])
-            else:
-                hobby_map[hobby[1]] = [hobby[2]]
-
-        print("hobby map", hobby_map)
-
-        # Preparing nodes from fetched data
-        nodes = [{
-            "id": member[0],
-            "name": member[2],
-            "dateOfBirth": member[3],
-            "dateOfDeath": member[4],
-            "pictureURL": member[5],
-            "streetAddress": member[6],
-            "city": member[7],
-            "state": member[9],
-            "country": member[9],
-            "zipCode": member[10],
-            "email": member[11],
-            "phone": member[12],
-            "hobbies": hobby_map.get(member[0], [])
-        } for member in members]
-
-        return {"nodes": nodes, "connections": connections}
-
-    except Exception as e:
-        print("Uhhh ohhhh")
-        print(e)
-        return {"detail": str(e)}
-
-
-
-# check to see if a given memberID is in a given tree
-def check_member_in_tree(memberid, treeid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT * FROM FamilyMembers WHERE MemberID = %s AND TreeID = %s",
-                       (memberid, treeid))
-        return cursor.fetchone() is not None
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-    
-
-# check to see if a member is in any relationships (both marraige or parent Child) in a given tree
-def check_member_in_relationships(memberid, treeid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT * FROM Relationships r JOIN Marriages m ON r.RelationshipID = m.RelationshipID WHERE (m.Spouse1MemberID = %s OR m.Spouse2MemberID = %s) AND r.TreeID = %s",
-                       (memberid, memberid, treeid))
-        if cursor.fetchone() is not None:
-            return True
-        cursor.execute("SELECT * FROM Relationships r JOIN ParentChild p ON r.RelationshipID = p.RelationshipID WHERE (p.ParentMemberID = %s OR p.ChildMemberID = %s) AND r.TreeID = %s",
-                       (memberid, memberid, treeid))
-        return cursor.fetchone() is not None
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-
-
-# delete a member from the tree, and all their hobbies
-def delete_member_from_tree(memberid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("DELETE FROM FamilyMembers WHERE MemberID = %s",
-                       (memberid,))
-        conn.commit()
-        return cursor.lastrowid
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-
-
-def get_search_history_by_user_id(userid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        # Prepare the SELECT statement to fetch search history for a specific user ID
-        query = "SELECT SearchQuery, SearchDate FROM SearchHistory WHERE UserID = %s"
-        cursor.execute(query, (userid,))
-
-        # Fetch all rows that match the query
-        results = cursor.fetchall()
-        print("RESULTS: ", results)
-        
-        # Commit the transaction if needed
-        conn.commit()
-        
-        # Return the results
-        return results  # Extracting SearchTerm from each tuple in the results list
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-    finally:
-        cursor.close()
-        conn.close()
 
 # ------------------- ADD ---------------------------------------
 
@@ -167,83 +14,19 @@ def add_user(username, email, phone, password_hash):
     except mysql.connector.Error as e:
         print(e)
         return None
-    
 
-
-def add_tree(treename, ownerUserID):
+def add_tree(treeid, treename, ownerUserID):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO FamilyTrees (TreeName, OwnerUserID) VALUES (%s, %s)",
-                       (treename, ownerUserID))
-        conn.commit()
-        return cursor.lastrowid
-    
-
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-    
-
-
-def get_accesslogs_by_userid(userid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT * FROM AccessLogs WHERE UserID = %s",
-                       (userid,))
-        return cursor.fetchall()
-    except Exception as e:
-        print(e)
-        return None
-
-
-
-# method to read which users have access to a specific tree
-# get the user id's, then the user details
-def get_tree_access_by_treeid(treeid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT UserID FROM TreeAccess WHERE TreeID = %s",
-                       (treeid,))
-        userids = cursor.fetchall()
-        users = []
-        for userid in userids:
-            cursor.execute("SELECT * FROM Users WHERE UserID = %s",
-                           (userid[0],))
-            users.append(cursor.fetchone())
-        return users
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-    
-
-def delete_tree_access_by_treeid(treeid, userid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("DELETE FROM TreeAccess WHERE TreeID = %s AND UserID = %s",
-                       (treeid, userid))
+        cursor.execute("INSERT INTO FamilyTrees (TreeID, TreeName, OwnerUserID) VALUES (%s, %s, %s)",
+                       (treeid, treename, ownerUserID))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
         print(e)
         return None
     
-
-def check_if_user_has_access_to_tree(userid, treeid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT * FROM TreeAccess WHERE UserID = %s AND TreeID = %s",
-                       (userid, treeid))
-        return cursor.fetchone() is not None
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-
-
 def add_tree_access(userid, treeid, accessrole):
     conn = db.create_connection()
     cursor = conn.cursor()
@@ -263,14 +46,13 @@ def add_family_member(treeid, fullname, dateofbirth, dateofdeath, pictureurl, st
     print("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                        (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
     try:
-        # cursor.execute("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-        #                (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
         cursor.execute("INSERT INTO FamilyMembers (TreeID, FullName, DateOfBirth, DateOfDeath, PictureURL, StreetAddress, City, State, Country, ZIPCode, Email, Phone) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                        (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone))
         conn.commit()
         print("Family Member added successfully")
+
         return cursor.lastrowid
-    except Exception as e:
+    except mysql.connector.Error as e:
         print(e)
         return None
     
@@ -290,9 +72,8 @@ def add_marriagerelationship(treeid, member1id, member2id):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        relationship_id = add_relationship(treeid) # first add relationship to super table
-        cursor.execute("INSERT INTO Marriages (RelationshipID, Spouse1MemberID, Spouse2MemberID) VALUES (%s, %s, %s)",
-                       (relationship_id, member1id, member2id))
+        cursor.execute("INSERT INTO MarriageRelationship (TreeID, Member1ID, Member2ID) VALUES (%s, %s, %s)",
+                       (treeid, member1id, member2id))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -303,37 +84,20 @@ def add_parentchildrelationship(treeid, parentid, childid):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        relationship_id = add_relationship(treeid) # first add relationship to super table
-        cursor.execute("INSERT INTO ParentChild (RelationshipID, ParentMemberID, ChildMemberID) VALUES (%s, %s, %s)",
-                       (relationship_id, parentid, childid))
+        cursor.execute("INSERT INTO ParentChildRelationship (TreeID, ParentID, ChildID) VALUES (%s, %s, %s)",
+                       (treeid, parentid, childid))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
         print(e)
         return None
     
-
-def delete_hobbies_by_memberid(memberid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-
-    print("DELETE FROM Hobbies WHERE MemberID = %s",)
-    try:
-        cursor.execute("DELETE FROM Hobbies WHERE MemberID = %s",
-                       (memberid,))
-        conn.commit()
-        return cursor.lastrowid
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-
-
-def add_hobby(memberid, hobby):
+def add_hobbies(treeid, memberid, hobby):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO Hobbies (MemberID, HobbyName) VALUES (%s, %s)",
-                       (memberid, hobby))
+        cursor.execute("INSERT INTO Hobbies (TreeID, MemberID, Hobby) VALUES (%s, %s, %s)",
+                       (treeid, memberid, hobby))
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -344,7 +108,7 @@ def add_searchhistory(userid, searchterm):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("INSERT INTO SearchHistory (UserID, SearchQuery, SearchDate) VALUES (%s, %s, NOW())",
+        cursor.execute("INSERT INTO SearchHistory (UserID, SearchTerm) VALUES (%s, %s)",
                        (userid, searchterm))
         conn.commit()
         return cursor.lastrowid
@@ -402,21 +166,15 @@ def update_tree_access(userid, treeid, accessrole):
         print(e)
         return None
 
-def update_family_member(memberid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone):
-    print("HOLA AMIGO")
-
+def update_family_member(memberid, treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone):
     conn = db.create_connection()
     cursor = conn.cursor()
-
-    print("HOLA AMIGO")
     try:
-        cursor.execute("UPDATE FamilyMembers SET FullName = %s, DateOfBirth = %s, DateOfDeath = %s, PictureURL = %s, StreetAddress = %s, City = %s, State = %s, Country = %s, ZIPCode = %s, Email = %s, Phone = %s WHERE MemberID = %s",
-                       (fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone, memberid))
+        cursor.execute("UPDATE FamilyMembers SET TreeID = %s, FullName = %s, DateOfBirth = %s, DateOfDeath = %s, PictureURL = %s, StreetAddress = %s, City = %s, State = %s, Country = %s, ZIPCode = %s, Email = %s, Phone = %s WHERE MemberID = %s",
+                       (treeid, fullname, dateofbirth, dateofdeath, pictureurl, streetaddress, city, state, country, zipcode, email, phone, memberid))
         conn.commit()
-        print("ran command")
         return cursor.lastrowid
     except mysql.connector.Error as e:
-        print("oopsy daisy")
         print(e)
         return None
 
@@ -518,26 +276,7 @@ def delete_tree(treeid):
         print(e)
         return None
     
-
-def get_shared_tree_access_by_userid(userid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT TreeID FROM TreeAccess WHERE UserID = %s",
-                       (userid,))
-        treeids = cursor.fetchall()
-        trees = []
-        for treeid in treeids:
-            cursor.execute("SELECT * FROM FamilyTrees WHERE TreeID = %s",
-                           (treeid[0],))
-            trees.append(cursor.fetchone())
-        return trees
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-
-
-def delete_tree_access(treeid, userid):
+def delete_tree_access(userid, treeid):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
@@ -561,24 +300,12 @@ def delete_family_member(memberid):
         print(e)
         return None
     
-
-
 def delete_relationship(relationshipId):
     conn = db.create_connection()
     cursor = conn.cursor()
     try:
-
-                # delete all marriages and parent-child relationships associated with this relationship
-        cursor.execute("DELETE FROM Marriages WHERE RelationshipID = %s",
-                       (relationshipId,))
-        cursor.execute("DELETE FROM ParentChild WHERE RelationshipID = %s",
-                          (relationshipId,))
-        
         cursor.execute("DELETE FROM Relationships WHERE RelationshipID = %s",
                        (relationshipId,))
-        
-
-        print(f"HELLOOOOOO {relationshipId}\n\n\n\n\n\n")
         conn.commit()
         return cursor.lastrowid
     except mysql.connector.Error as e:
@@ -658,19 +385,6 @@ def get_user(userid):
         print(e)
         return None
     
-
-def get_user_by_id(userid):
-    conn = db.create_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("SELECT * FROM Users WHERE UserID = %s",
-                       (userid,))
-        return cursor.fetchone()
-    except mysql.connector.Error as e:
-        print(e)
-        return None
-
-    
 def get_user_by_username(username):
     conn = db.create_connection()
     cursor = conn.cursor()
@@ -704,37 +418,16 @@ def get_tree_access(userid, treeid):
         print(e)
         return None
     
-# def get_family_member(memberid):
-#     conn = db.create_connection()
-#     cursor = conn.cursor()
-#     try:
-#         cursor.execute("SELECT * FROM FamilyMembers WHERE MemberID = %s",
-#                        (memberid,))
-#         return cursor.fetchone()
-#     except mysql.connector.Error as e:
-#         print(e)
-#         return None
-
-
 def get_family_member(memberid):
-    conn = None
+    conn = db.create_connection()
+    cursor = conn.cursor()
     try:
-        # conn = mysql.connector.connect(host='hostname', database='databasename', user='username', password='password')
-        
-        conn = db.create_connection()
-        cursor = conn.cursor(dictionary=True)  # Set dictionary=True to return results as a dictionary
-        cursor.execute("SELECT * FROM FamilyMembers WHERE MemberID = %s", (memberid,))
-        result = cursor.fetchone()  # This will be a dictionary where keys are column names
-        return result
-    except Exception as e:
+        cursor.execute("SELECT * FROM FamilyMembers WHERE MemberID = %s",
+                       (memberid,))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
         print(e)
         return None
-    finally:
-        if conn:
-            conn.close()
-
-
-
     
 def get_relationship(relationshipId):
     conn = db.create_connection()
@@ -769,7 +462,16 @@ def get_parentchildrelationship(parentchildId):
         print(e)
         return None
     
-
+def get_hobbies(hobbyId):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM Hobbies WHERE HobbyID = %s",
+                       (hobbyId,))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
     
 def get_searchhistory(searchId):
     conn = db.create_connection()
@@ -793,6 +495,27 @@ def get_accesslogs(logId):
         print(e)
         return None
     
+def get_all_accesslogs():
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM AccessLogs")
+        return cursor.fetchall()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def get_accesslogs_by_userid(userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM AccessLogs WHERE UserID = %s",
+                       (userid,))
+        return cursor.fetchall()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
 def get_all_users():
     conn = db.create_connection()
     cursor = conn.cursor()
@@ -811,13 +534,12 @@ def getTreeIDfromUserName(username):
                        (username,))
         userid = cursor.fetchone()[0] #tuple object
         cursor.fetchall()
-        cursor.execute("SELECT TreeID FROM FamilyTrees WHERE OwnerUserID = %s",
+        cursor.execute("SELECT TreeID FROM TreeAccess WHERE UserID = %s",
                        (userid,))
         return cursor.fetchone()[0]
     except mysql.connector.Error as e:
         print(e)
         return None
-    
     
 def getFamilyMemberIDsfromTreeID(treeid):
     conn = db.create_connection()
@@ -830,7 +552,17 @@ def getFamilyMemberIDsfromTreeID(treeid):
         print(e)
         return None
     
-
+def getFamilyMemberByFullName(fullname, treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM FamilyMembers WHERE FullName = %s AND TreeID = %s",
+                       (fullname, treeid))
+        return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
 def getHobbyNamesfromMemberID(memberid):
     conn = db.create_connection()
     cursor = conn.cursor()
@@ -874,6 +606,26 @@ def getParentChildfromRelationshipID(relationshipid):
         cursor.execute("SELECT * FROM ParentChild WHERE RelationshipID = %s",
                        (relationshipid,))
         return cursor.fetchone()
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+def checkIfRelationshipInUserTree(rel_id, user_id):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM TreeAccess WHERE UserID = %s AND AccessRole = 'Editor'",
+                       (user_id,))
+        tree_id = cursor.fetchone()[1]
+        cursor.fetchall()
+        cursor.execute("SELECT * FROM Relationships WHERE RelationshipID = %s AND TreeID = %s",
+                       (rel_id, tree_id))
+        result = cursor.fetchone()
+
+        if result is not None:
+            return True
+        else:
+            return False
     except mysql.connector.Error as e:
         print(e)
         return None
