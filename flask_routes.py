@@ -120,6 +120,8 @@ def create_marriage():
             familymember = db.get_family_member(memberID)
             print(familymember)
 
+        add_access_log(session["userID"], "create-marriage", "Marriage created")
+
         return jsonify({"message": "Sign up successful"})
     except Exception as e:
         print(f'e')
@@ -225,8 +227,8 @@ def delete_user(username):
 def add_family_member():
     data = request.json
 
-    # treeid = session["treeID"] <-- uncomment this line when session is implemented
-    member = FamilyMember(int(data["treeid"]), data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
+    treeid = session["treeID"] # <-- uncomment this line when session is implemented
+    member = FamilyMember(treeid, data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
 
     default_values = {
         "dateofdeath": None,
@@ -272,9 +274,12 @@ def get_family_member(fullname):
 @app.route("/updatefamilymember/<fullname>", methods=["PUT"])
 def update_family_member(fullname):
     data = request.json
+
+    # Check only within the family tree that the user owns -- cannot edit trees that the user does not own
     member = db.getFamilyMemberByFullName(fullname, session["treeID"])
     if member is None:
         return jsonify({"detail": "Family member not found"}), 404
+    
     db.update_family_member(member[0], data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
     add_access_log(session["userID"], "update-family-member", "Family member " + str(data["fullname"]) + " updated")
     return jsonify({"message": "Family member updated successfully"})
