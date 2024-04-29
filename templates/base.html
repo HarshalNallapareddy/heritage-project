@@ -23,17 +23,58 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
-                    <li class="nav-item">
-                        
-                        <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{url_for('login_page')}}">Login</a>
-                    </li>
-                    <li class="nav-item">
-                        <a  class="nav-link" href="{{url_for('tree')}}">Family Tree</a>
-                    </li>
-                    <li class="nav-item">
+                    {% if not session.username%}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('signup') }}">Sign Up</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{url_for('login_page')}}">Login</a>
+                        </li>
+                    
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{url_for('tree')}}">Family Tree</a>
+                        </li>
+
+
+
+                        <li>
+                            <a class="nav-link" href="{{url_for('accesslogs_page')}}">Logs</a>
+                        </li>
+
+                        <li>
+                            <a class="nav-link" href="{{url_for('share_page')}}">Share</a>
+                        </li>
+
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        </li>
+
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('download_tree') }}">Download Tree</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link"><b>{{session.username}}</b></a>
+                        </li>
+
+
+                    {% endif %}
+
+
+
+                    
+
+
+                    <!-- {% if session.username %}
+                    <p>Welcome, {{ session.username }}! <a href="{{ url_for('logout') }}">Logout</a></p>
+                {% else %}
+                    <p>You are not logged in.</p>
+                {% endif %} -->
+
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="{{url_for('add_family_member_page')}}">Add Family Member</a>
                     </li>
                     <li class="nav-item">

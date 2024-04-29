@@ -1,20 +1,9 @@
-from flask import Flask, request, redirect, session, jsonify, render_template, url_for, flash
-from flask_cors import CORS
-from werkzeug.exceptions import HTTPException
-from pydantic import BaseModel, ValidationError
-import mimetypes
+from flask import Flask, request, redirect, session, jsonify, render_template, url_for, flash, send_file
 import request_db as db
-# from flask.json import JSONEncoder
 from flask_bcrypt import generate_password_hash, check_password_hash
 from datetime import date, datetime
 import json
-
-class User(BaseModel):
-    userid: str
-    username: str
-    email: str
-    phone: str
-    password: str
+from io import BytesIO
 
 
 
@@ -49,6 +38,43 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+@app.route('/download_tree', methods=['GET'])
+def download_tree():
+    # Create a dictionary to be converted into a JSON object
+    # Define the path for the temporary json file
+    add_access_log("view-tree", "Viewing family tree")
+    try:
+        response = db.get_tree_data(session['treeid'])
+        if len(response) == 0:
+            return jsonify({"detail": "No data found"}), 404
+        
+        else:
+            if "detail" in response:
+                return jsonify(response), 500
+            else:
+                memory_file = BytesIO()
+                memory_file.write(json.dumps(response, cls=CustomJSONEncoder).encode('utf-8'))
+                # memory_file.write(jsonify(response))
+                memory_file.seek(0)  # Go to the beginning of the BytesIO object
+                return send_file(memory_file, as_attachment=True,download_name='family_tree.json' ,mimetype='application/json')
+    
+    except Exception as e:
+        print("Uhhh ohhhh")
+        print(e)
+        print(str(e))
+        return jsonify({"detail": str(e)}), 500
+
+
+    # filename = 'data.json'
+    # data = {"hello": ""}
+    # # Writing JSON data
+    # with open(filename, 'w') as f:
+    #     json.dump(data, f)
+
+    # # Return the file for download
+    # return send_file(filename, as_attachment=True, download_name='data.json')
 
 
 @app.route('/share_page')
@@ -143,7 +169,6 @@ def view_tree(tree_id):
 
         return render_template('view_tree.html', tree_data=data)
     
-
     return share_page()
 
     # if not, return to share page
@@ -255,9 +280,13 @@ def get_search_history():
 def delete_relationship():
     try:
         rel_id = request.json.get("rel_id")
-        # check if the rel_id is in the user's tree, if not then return an error
-        if(db.checkIfRelationshipInUserTree(rel_id, session["userID"]) == False):
-            return jsonify({"message": "Relationship not found in user's tree"}), 401
+
+        # check to see if relationship is in the user's tree
+        in_tree = db.check_relationship_in_tree(session['treeid'], rel_id)
+        print("IN TREE: ", in_tree)
+        if not in_tree:
+            return jsonify({"message": "Relationship not in user's tree"}), 401
+
         print(f"\n\n\nDELETING {rel_id}")
         db.delete_relationship(rel_id)
         add_access_log("delete-relationship", f"Deleted relationship with ID {rel_id}")
@@ -305,6 +334,16 @@ def update_family_member_page(memberID):
     # TODO: add hobbies
     if request.method == 'POST':
             try:
+
+                # print("HELLLLOOOOO")
+                # check to see if member is in the user's tree
+                in_tree = db.check_member_in_tree( memberID, session['treeid'],)
+                print("IN_TREE: ", in_tree)
+                if not in_tree:
+                    print("not in tree")
+                    return jsonify({"message": "Member not in user's tree"}), 401
+
+
                 # Extract form data
                 full_name = request.form['fullname']
                 date_of_birth = request.form['dateofbirth']
@@ -370,6 +409,11 @@ def update_family_member_page(memberID):
         
 
     else:
+        in_tree = db.check_member_in_tree( memberID, session['treeid'],)
+        print("IN_TREE: ", in_tree)
+        if not in_tree:
+            print("not in tree")
+            return jsonify({"message": "Member not in user's tree"}), 401
         member_dict = db.get_family_member(memberID)
         hobbies = db.getHobbyNamesfromMemberID(memberID)
         # print(hobbies)
@@ -423,6 +467,14 @@ def find_path():
         # get source and target
         source = request.json.get("source")
         target = request.json.get("target")
+
+
+        # check to see if source and target are in the tree
+        familymemberids = db.getFamilyMemberIDsfromTreeID(session['treeid'])
+        familymemberids = [x[0] for x in familymemberids]
+
+        if source not in familymemberids or target not in familymemberids:
+            return jsonify({"message", "Source and Target not found. Please enter their full names properly."}), 401
 
 
         print("SOURCE: ", source)
@@ -609,14 +661,8 @@ def generate_tree():
 @app.route("/addfamilymember/", methods=["POST"])
 def add_family_member():
     data = request.json
-<<<<<<< HEAD
-
-    # print("DATA: ", data)
-    member = FamilyMember(session['treeid'], data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
-=======
     # treeid = session["treeid"] <-- uncomment this line when session is implemented
     member = FamilyMember(int(data["treeid"]), data["fullname"], data["dateofbirth"], data["dateofdeath"], data["pictureurl"], data["streetaddress"], data["city"], data["state"], data["country"], data["zipcode"], data["email"], data["phone"])
->>>>>>> 66f9c2fc6cb6e51fdb154d7fbcd179c01507ce37
     default_values = {
         "dateofdeath": None,
         "pictureurl": None,
@@ -629,10 +675,6 @@ def add_family_member():
         "email": "NULL",
     }
     member_sanitized = {key: default_values[key] if value=='' else value for key, value in vars(member).items()}
-<<<<<<< HEAD
-=======
-
->>>>>>> 66f9c2fc6cb6e51fdb154d7fbcd179c01507ce37
     print("DATA: ", member_sanitized)
     memberid = db.add_family_member(session["treeid"], fullname=member_sanitized['fullname'], dateofbirth=member_sanitized['dateofbirth'], dateofdeath=member_sanitized['dateofdeath'], pictureurl=member_sanitized['pictureurl'], streetaddress=member_sanitized['streetaddress'], city=member_sanitized['city'], state=member_sanitized['state'], country=member_sanitized['country'], zipcode=member_sanitized['zipcode'], email=member_sanitized['email'], phone=member_sanitized['phone'])
     add_access_log("add-family-member", "Family member " + str(member_sanitized["fullname"]) + " added")

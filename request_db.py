@@ -27,6 +27,80 @@ def add_tree(treeid, treename, ownerUserID):
         print(e)
         return None
     
+
+
+def get_accesslogs_by_userid(userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM AccessLogs WHERE UserID = %s",
+                       (userid,))
+        return cursor.fetchall()
+    except Exception as e:
+        print(e)
+        return None
+
+
+
+# method to read which users have access to a specific tree
+# get the user id's, then the user details
+def get_tree_access_by_treeid(treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT UserID FROM TreeAccess WHERE TreeID = %s",
+                       (treeid,))
+        userids = cursor.fetchall()
+        users = []
+        for userid in userids:
+            cursor.execute("SELECT * FROM Users WHERE UserID = %s",
+                           (userid[0],))
+            users.append(cursor.fetchone())
+        return users
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+
+def delete_tree_access_by_treeid(treeid, userid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM TreeAccess WHERE TreeID = %s AND UserID = %s",
+                       (treeid, userid))
+        conn.commit()
+        return cursor.lastrowid
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+
+def check_if_user_has_access_to_tree(userid, treeid):
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM TreeAccess WHERE UserID = %s AND TreeID = %s",
+                       (userid, treeid))
+        return cursor.fetchone() is not None
+    except mysql.connector.Error as e:
+        print(e)
+        return None
+    
+
+def check_relationship_in_tree(treeid, relid):
+    # check if a relationship exists in a given tree (true or false)
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("SELECT * FROM Relationships WHERE TreeID = %s AND RelationshipID = %s",
+                       (treeid, relid))
+        return cursor.fetchone() is not None
+    except:
+        return None
+
+
+
 def add_tree_access(userid, treeid, accessrole):
     conn = db.create_connection()
     cursor = conn.cursor()
