@@ -644,15 +644,11 @@ def add_family_member():
     for hobby in hobbies:
         db.add_hobby(memberid, hobby)
         print(f"HOBBY ADDED: {hobby}")
-<<<<<<< HEAD
- 
-=======
     
 
 
 
 
->>>>>>> 66f9c2fc6cb6e51fdb154d7fbcd179c01507ce37
     return jsonify({"message": "Family member added successfully"})
 
 if __name__ == "__main__":
