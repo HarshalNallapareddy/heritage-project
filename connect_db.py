@@ -4,8 +4,9 @@ def create_connection():
     try:
         print('trying to connect to Google Cloud MySQL Database')
         conn = mysql.connector.connect(
-            user='root',
-            password='Heritage4750',
+            user='server',
+            # password='Heritage4750',
+            password='password123',
             host='34.48.57.233',
             database='familytree'
         )
