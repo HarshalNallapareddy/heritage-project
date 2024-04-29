@@ -1,21 +1,10 @@
 from flask import Flask, request, redirect, session, jsonify, render_template, url_for, flash, send_file
-from flask_cors import CORS
-from werkzeug.exceptions import HTTPException
-from pydantic import BaseModel, ValidationError
-import mimetypes
 import request_db as db
 from flask_bcrypt import generate_password_hash, check_password_hash
 from datetime import datetime
 from datetime import date, datetime
 import json
 from io import BytesIO
-
-class User(BaseModel):
-    userid: str
-    username: str
-    email: str
-    phone: str
-    password: str
 
 
 

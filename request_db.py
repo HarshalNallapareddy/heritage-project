@@ -1,5 +1,4 @@
 import connect_db as db
-import mysql
 import mysql.connector
 
 
