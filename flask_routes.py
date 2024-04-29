@@ -179,7 +179,6 @@ def view_tree(tree_id):
 
         return render_template('view_tree.html', tree_data=data)
     
-
     return share_page()
 
     # if not, return to share page
@@ -291,6 +290,13 @@ def get_search_history():
 def delete_relationship():
     try:
         rel_id = request.json.get("rel_id")
+
+        # check to see if relationship is in the user's tree
+        in_tree = db.check_relationship_in_tree(session['treeid'], rel_id)
+        print("IN TREE: ", in_tree)
+        if not in_tree:
+            return jsonify({"message": "Relationship not in user's tree"}), 401
+
         print(f"\n\n\nDELETING {rel_id}")
         db.delete_relationship(rel_id)
         add_access_log("delete-relationship", f"Deleted relationship with ID {rel_id}")
@@ -338,6 +344,16 @@ def update_family_member_page(memberID):
     # TODO: add hobbies
     if request.method == 'POST':
             try:
+
+                # print("HELLLLOOOOO")
+                # check to see if member is in the user's tree
+                in_tree = db.check_member_in_tree( memberID, session['treeid'],)
+                print("IN_TREE: ", in_tree)
+                if not in_tree:
+                    print("not in tree")
+                    return jsonify({"message": "Member not in user's tree"}), 401
+
+
                 # Extract form data
                 full_name = request.form['fullname']
                 date_of_birth = request.form['dateofbirth']
@@ -403,6 +419,11 @@ def update_family_member_page(memberID):
         
 
     else:
+        in_tree = db.check_member_in_tree( memberID, session['treeid'],)
+        print("IN_TREE: ", in_tree)
+        if not in_tree:
+            print("not in tree")
+            return jsonify({"message": "Member not in user's tree"}), 401
         member_dict = db.get_family_member(memberID)
         hobbies = db.getHobbyNamesfromMemberID(memberID)
         # print(hobbies)
@@ -456,6 +477,14 @@ def find_path():
         # get source and target
         source = request.json.get("source")
         target = request.json.get("target")
+
+
+        # check to see if source and target are in the tree
+        familymemberids = db.getFamilyMemberIDsfromTreeID(session['treeid'])
+        familymemberids = [x[0] for x in familymemberids]
+
+        if source not in familymemberids or target not in familymemberids:
+            return jsonify({"message", "Source and Target not found. Please enter their full names properly."}), 401
 
 
         print("SOURCE: ", source)

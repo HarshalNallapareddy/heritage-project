@@ -242,6 +242,20 @@ def check_if_user_has_access_to_tree(userid, treeid):
     except mysql.connector.Error as e:
         print(e)
         return None
+    
+
+def check_relationship_in_tree(treeid, relid):
+    # check if a relationship exists in a given tree (true or false)
+    conn = db.create_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute("SELECT * FROM Relationships WHERE TreeID = %s AND RelationshipID = %s",
+                       (treeid, relid))
+        return cursor.fetchone() is not None
+    except:
+        return None
+
 
 
 def add_tree_access(userid, treeid, accessrole):
